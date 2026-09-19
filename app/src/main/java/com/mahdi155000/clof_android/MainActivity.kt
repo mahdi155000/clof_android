@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,40 +17,27 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mahdi155000.clof_android.data.MovieEntity
 import com.mahdi155000.clof_android.viewmodel.MovieViewModel
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.dp
+
 
 class MainActivity : ComponentActivity() {
 
@@ -63,7 +51,9 @@ class MainActivity : ComponentActivity() {
         setContent {
 
             var darkMode by remember {
-                mutableStateOf(settingsManager.isDarkMode())
+                mutableStateOf(
+                    settingsManager.isDarkMode()
+                )
             }
 
             MaterialTheme(
@@ -85,6 +75,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 
 @Composable
 fun ClofApp(
@@ -208,6 +199,8 @@ fun ClofApp(
         }
     }
 }
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClofTopBar(
@@ -222,7 +215,7 @@ fun ClofTopBar(
 
             Row(
                 modifier = Modifier.padding(end = 8.dp),
-                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically
             ) {
 
                 Text("Dark")
@@ -248,23 +241,93 @@ fun MovieList(
         mutableStateOf("")
     }
 
-    val filteredMovies = movies.filter { movie ->
-        movie.title.contains(
-            searchText,
-            ignoreCase = true
-        ) || movie.genre.contains(
-            searchText,
-            ignoreCase = true
-        )
+    var typeFilter by remember {
+        mutableStateOf("All")
     }
+
+    var watchedFilter by remember {
+        mutableStateOf("All")
+    }
+
+    var sortOption by remember {
+        mutableStateOf("Recently Added")
+    }
+
+    var showFilters by remember {
+        mutableStateOf(false)
+    }
+
+    val filteredMovies = movies
+        .filter { movie ->
+
+            val matchesSearch =
+                movie.title.contains(
+                    searchText,
+                    ignoreCase = true
+                ) ||
+                        movie.genre.contains(
+                            searchText,
+                            ignoreCase = true
+                        )
+
+            val matchesType =
+                when (typeFilter) {
+                    "Movies" -> !movie.isSeries
+                    "Series" -> movie.isSeries
+                    else -> true
+                }
+
+            val matchesWatched =
+                when (watchedFilter) {
+                    "Watched" -> movie.watched
+                    "Unwatched" -> !movie.watched
+                    else -> true
+                }
+
+            matchesSearch &&
+                    matchesType &&
+                    matchesWatched
+        }
+        .let { list ->
+
+            when (sortOption) {
+
+                "Title A-Z" -> {
+                    list.sortedBy {
+                        it.title.lowercase()
+                    }
+                }
+
+                "Title Z-A" -> {
+                    list.sortedByDescending {
+                        it.title.lowercase()
+                    }
+                }
+
+                "Oldest Added" -> {
+                    list.sortedBy {
+                        it.id
+                    }
+                }
+
+                else -> {
+                    list.sortedByDescending {
+                        it.id
+                    }
+                }
+            }
+        }
 
     Column(
         modifier = modifier.fillMaxSize()
     ) {
 
+        // Search
         OutlinedTextField(
             value = searchText,
-            onValueChange = { searchText = it },
+            onValueChange = {
+                searchText = it
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
@@ -280,6 +343,156 @@ fun MovieList(
             singleLine = true
         )
 
+        // Filter button
+        Button(
+            onClick = {
+                showFilters = !showFilters
+            },
+            modifier = Modifier.padding(
+                horizontal = 12.dp
+            )
+        ) {
+            Text(
+                if (showFilters) {
+                    "Hide Filters"
+                } else {
+                    "Show Filters"
+                }
+            )
+        }
+
+        if (showFilters) {
+
+            // Type filter
+            Text(
+                text = "Type",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(
+                    start = 12.dp,
+                    top = 12.dp
+                )
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+
+                FilterButton(
+                    text = "All",
+                    selected = typeFilter == "All"
+                ) {
+                    typeFilter = "All"
+                }
+
+                FilterButton(
+                    text = "Movies",
+                    selected = typeFilter == "Movies"
+                ) {
+                    typeFilter = "Movies"
+                }
+
+                FilterButton(
+                    text = "Series",
+                    selected = typeFilter == "Series"
+                ) {
+                    typeFilter = "Series"
+                }
+            }
+
+            // Watched filter
+            Text(
+                text = "Watched",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(
+                    start = 12.dp,
+                    top = 12.dp
+                )
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+
+                FilterButton(
+                    text = "All",
+                    selected = watchedFilter == "All"
+                ) {
+                    watchedFilter = "All"
+                }
+
+                FilterButton(
+                    text = "Watched",
+                    selected = watchedFilter == "Watched"
+                ) {
+                    watchedFilter = "Watched"
+                }
+
+                FilterButton(
+                    text = "Unwatched",
+                    selected = watchedFilter == "Unwatched"
+                ) {
+                    watchedFilter = "Unwatched"
+                }
+            }
+
+            // Sort
+            Text(
+                text = "Sort",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(
+                    start = 12.dp,
+                    top = 12.dp
+                )
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+
+                FilterButton(
+                    text = "Recent",
+                    selected = sortOption == "Recently Added"
+                ) {
+                    sortOption = "Recently Added"
+                }
+
+                FilterButton(
+                    text = "Oldest",
+                    selected = sortOption == "Oldest Added"
+                ) {
+                    sortOption = "Oldest Added"
+                }
+
+                FilterButton(
+                    text = "A-Z",
+                    selected = sortOption == "Title A-Z"
+                ) {
+                    sortOption = "Title A-Z"
+                }
+
+                FilterButton(
+                    text = "Z-A",
+                    selected = sortOption == "Title Z-A"
+                ) {
+                    sortOption = "Title Z-A"
+                }
+            }
+
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
+        }
+
+        // Movie list
         if (filteredMovies.isEmpty()) {
 
             Column(
@@ -290,7 +503,7 @@ fun MovieList(
             ) {
 
                 Text(
-                    text = if (searchText.isBlank()) {
+                    text = if (movies.isEmpty()) {
                         "No movies yet"
                     } else {
                         "No results found"
@@ -303,10 +516,10 @@ fun MovieList(
                 )
 
                 Text(
-                    text = if (searchText.isBlank()) {
+                    text = if (movies.isEmpty()) {
                         "Press + to add a movie."
                     } else {
-                        "Try a different search."
+                        "Try changing your search or filters."
                     }
                 )
             }
@@ -343,6 +556,28 @@ fun MovieList(
         }
     }
 }
+
+
+@Composable
+fun FilterButton(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick
+    ) {
+        Text(
+            text = if (selected) {
+                "✓ $text"
+            } else {
+                text
+            }
+        )
+    }
+}
+
+
 @Composable
 fun MovieItem(
     movie: MovieEntity,
@@ -351,8 +586,7 @@ fun MovieItem(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier
-            .fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier
@@ -360,7 +594,6 @@ fun MovieItem(
                 .padding(16.dp)
         ) {
 
-            // Title
             Text(
                 text = movie.title,
                 style = MaterialTheme.typography.titleLarge
@@ -370,8 +603,8 @@ fun MovieItem(
                 modifier = Modifier.height(6.dp)
             )
 
-            // Genre
             if (movie.genre.isNotBlank()) {
+
                 Text(
                     text = movie.genre,
                     style = MaterialTheme.typography.bodyMedium
@@ -382,7 +615,6 @@ fun MovieItem(
                 )
             }
 
-            // Type
             Text(
                 text = if (movie.isSeries) {
                     "Series"
@@ -392,8 +624,8 @@ fun MovieItem(
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            // Series information
             if (movie.isSeries) {
+
                 Spacer(
                     modifier = Modifier.height(4.dp)
                 )
@@ -408,7 +640,6 @@ fun MovieItem(
                 modifier = Modifier.height(8.dp)
             )
 
-            // Watched status
             Text(
                 text = if (movie.watched) {
                     "Watched"
@@ -422,7 +653,6 @@ fun MovieItem(
                 modifier = Modifier.height(16.dp)
             )
 
-            // Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
