@@ -76,34 +76,71 @@ fun ClofApp(
     onDarkModeChange: (Boolean) -> Unit,
     movieViewModel: MovieViewModel = viewModel()
 ) {
-    val movies by movieViewModel.movies.collectAsState()
+    var showAddMovieScreen by remember {
+        mutableStateOf(false)
+    }
 
-    Scaffold(
-        topBar = {
-            ClofTopBar(
-                darkMode = darkMode,
-                onDarkModeChange = onDarkModeChange
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    movieViewModel.addMovie(
-                        title = "Test Movie",
-                        genre = "Test"
-                    )
-                }
+    if (showAddMovieScreen) {
+
+        Scaffold(
+            topBar = {
+                ClofTopBar(
+                    darkMode = darkMode,
+                    onDarkModeChange = onDarkModeChange
+                )
+            }
+        ) { innerPadding ->
+
+            Column(
+                modifier = Modifier.padding(innerPadding)
             ) {
-                Text("+")
+
+                Button(
+                    onClick = {
+                        showAddMovieScreen = false
+                    },
+                    modifier = Modifier.padding(12.dp)
+                ) {
+                    Text("Back")
+                }
+
+                AddMovieScreen(
+                    movieViewModel = movieViewModel,
+                    onMovieAdded = {
+                        showAddMovieScreen = false
+                    }
+                )
             }
         }
-    ) { innerPadding ->
 
-        MovieList(
-            movies = movies,
-            movieViewModel = movieViewModel,
-            modifier = Modifier.padding(innerPadding)
-        )
+    } else {
+
+        val movies by movieViewModel.movies.collectAsState()
+
+        Scaffold(
+            topBar = {
+                ClofTopBar(
+                    darkMode = darkMode,
+                    onDarkModeChange = onDarkModeChange
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = {
+                        showAddMovieScreen = true
+                    }
+                ) {
+                    Text("+")
+                }
+            }
+        ) { innerPadding ->
+
+            MovieList(
+                movies = movies,
+                movieViewModel = movieViewModel,
+                modifier = Modifier.padding(innerPadding)
+            )
+        }
     }
 }
 
