@@ -12,17 +12,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class MovieViewModel(
-    application: Application
-) : AndroidViewModel(application) {
+class MovieViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val database =
-        AppDatabase.getDatabase(application)
+    private val database = AppDatabase.getDatabase(application)
 
-    private val repository =
-        MovieRepository(
-            database.movieDao()
-        )
+    private val repository = MovieRepository(
+        database.movieDao()
+    )
 
     val movies: StateFlow<List<MovieEntity>> =
         repository.allMovies.stateIn(
@@ -31,9 +27,7 @@ class MovieViewModel(
             initialValue = emptyList()
         )
 
-    fun observeMovie(
-        id: Int
-    ): Flow<MovieEntity?> {
+    fun observeMovie(id: Int): Flow<MovieEntity?> {
         return repository.observeMovie(id)
     }
 
@@ -43,17 +37,18 @@ class MovieViewModel(
         isSeries: Boolean = false,
         season: Int = 0,
         episode: Int = 0,
+        collection: String = "main",
         onComplete: () -> Unit = {}
     ) {
         viewModelScope.launch {
-
             repository.insertMovie(
                 MovieEntity(
                     title = title,
                     genre = genre,
                     isSeries = isSeries,
                     season = season,
-                    episode = episode
+                    episode = episode,
+                    collection = collection
                 )
             )
 
@@ -66,9 +61,7 @@ class MovieViewModel(
         onComplete: () -> Unit = {}
     ) {
         viewModelScope.launch {
-
             repository.deleteMovie(movie)
-
             onComplete()
         }
     }
@@ -78,7 +71,6 @@ class MovieViewModel(
         watched: Boolean
     ) {
         viewModelScope.launch {
-
             repository.setWatched(
                 movie.id,
                 watched
@@ -86,25 +78,15 @@ class MovieViewModel(
         }
     }
 
-    fun nextEpisode(
-        movie: MovieEntity
-    ) {
+    fun nextEpisode(movie: MovieEntity) {
         viewModelScope.launch {
-
-            repository.nextEpisode(
-                movie.id
-            )
+            repository.nextEpisode(movie.id)
         }
     }
 
-    fun previousEpisode(
-        movie: MovieEntity
-    ) {
+    fun previousEpisode(movie: MovieEntity) {
         viewModelScope.launch {
-
-            repository.previousEpisode(
-                movie.id
-            )
+            repository.previousEpisode(movie.id)
         }
     }
 
@@ -113,9 +95,7 @@ class MovieViewModel(
         onComplete: () -> Unit = {}
     ) {
         viewModelScope.launch {
-
             repository.updateMovie(movie)
-
             onComplete()
         }
     }

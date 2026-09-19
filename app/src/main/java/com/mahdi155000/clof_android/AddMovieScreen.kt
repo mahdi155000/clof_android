@@ -137,6 +137,7 @@ fun AddMovieScreen(
                 movieViewModel.addMovie(
                     title = title.trim(),
                     genre = genre.trim(),
+                    collection = collection.trim().ifBlank { "main" },
                     isSeries = isSeries,
                     season = if (isSeries) {
                         season.toIntOrNull() ?: 1
