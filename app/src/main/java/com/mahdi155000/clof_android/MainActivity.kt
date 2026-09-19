@@ -91,9 +91,13 @@ fun ClofApp(
         mutableStateOf<MovieEntity?>(null)
     }
 
-    if (movieBeingEdited != null) {
+    var movieBeingViewed by remember {
+        mutableStateOf<MovieEntity?>(null)
+    }
 
-        val movie = movieBeingEdited!!
+    if (movieBeingViewed != null) {
+
+        val movie = movieBeingViewed!!
 
         Scaffold(
             topBar = {
@@ -110,27 +114,21 @@ fun ClofApp(
                     .padding(innerPadding)
             ) {
 
-                Button(
-                    onClick = {
-                        movieBeingEdited = null
-                    },
-                    modifier = Modifier.padding(12.dp)
-                ) {
-                    Text("Back")
-                }
-
-                EditMovieScreen(
+                MovieDetailsScreen(
                     movie = movie,
                     movieViewModel = movieViewModel,
-                    onMovieUpdated = {
-                        movieBeingEdited = null
+                    onBack = {
+                        movieBeingViewed = null
+                    },
+                    onEdit = {
+                        movieBeingViewed = null
+                        movieBeingEdited = movie
                     }
                 )
             }
         }
 
-    } else if (showAddMovieScreen) {
-
+    } else if (movieBeingEdited != null) {
         Scaffold(
             topBar = {
                 ClofTopBar(
@@ -192,6 +190,9 @@ fun ClofApp(
                 onEdit = { movie ->
                     movieBeingEdited = movie
                 },
+                onMovieClick = { movie ->
+                    movieBeingViewed = movie
+                },
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
@@ -235,6 +236,7 @@ fun MovieList(
     movies: List<MovieEntity>,
     movieViewModel: MovieViewModel,
     onEdit: (MovieEntity) -> Unit,
+    onMovieClick: (MovieEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var searchText by remember {
@@ -545,7 +547,8 @@ fun MovieList(
                     MovieItem(
                         movie = movie,
                         movieViewModel = movieViewModel,
-                        onEdit = onEdit
+                        onEdit = onEdit,
+                        onMovieClick = onMovieClick
                     )
 
                     Spacer(
@@ -583,9 +586,13 @@ fun MovieItem(
     movie: MovieEntity,
     movieViewModel: MovieViewModel,
     onEdit: (MovieEntity) -> Unit,
+    onMovieClick: (MovieEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
+        onClick = {
+            onMovieClick(movie)
+        },
         modifier = modifier.fillMaxWidth()
     ) {
         Column(
