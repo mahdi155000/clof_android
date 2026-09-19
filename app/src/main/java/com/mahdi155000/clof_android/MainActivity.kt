@@ -19,11 +19,15 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -38,9 +42,29 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
+        val settingsManager = SettingsManager(this)
+
         setContent {
-            MaterialTheme {
-                ClofApp()
+
+            var darkMode by remember {
+                mutableStateOf(settingsManager.isDarkMode())
+            }
+
+            MaterialTheme(
+                colorScheme = if (darkMode) {
+                    androidx.compose.material3.darkColorScheme()
+                } else {
+                    androidx.compose.material3.lightColorScheme()
+                }
+            ) {
+
+                ClofApp(
+                    darkMode = darkMode,
+                    onDarkModeChange = { enabled ->
+                        darkMode = enabled
+                        settingsManager.setDarkMode(enabled)
+                    }
+                )
             }
         }
     }
@@ -48,13 +72,18 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun ClofApp(
+    darkMode: Boolean,
+    onDarkModeChange: (Boolean) -> Unit,
     movieViewModel: MovieViewModel = viewModel()
 ) {
     val movies by movieViewModel.movies.collectAsState()
 
     Scaffold(
         topBar = {
-            ClofTopBar()
+            ClofTopBar(
+                darkMode = darkMode,
+                onDarkModeChange = onDarkModeChange
+            )
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -80,10 +109,28 @@ fun ClofApp(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ClofTopBar() {
+fun ClofTopBar(
+    darkMode: Boolean,
+    onDarkModeChange: (Boolean) -> Unit
+) {
     TopAppBar(
         title = {
             Text("CLOF")
+        },
+        actions = {
+
+            Row(
+                modifier = Modifier.padding(end = 8.dp),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+
+                Text("Dark")
+
+                Switch(
+                    checked = darkMode,
+                    onCheckedChange = onDarkModeChange
+                )
+            }
         }
     )
 }
@@ -102,6 +149,7 @@ fun MovieList(
                 .padding(24.dp),
             verticalArrangement = Arrangement.Center
         ) {
+
             Text(
                 text = "No movies yet",
                 style = MaterialTheme.typography.headlineSmall
