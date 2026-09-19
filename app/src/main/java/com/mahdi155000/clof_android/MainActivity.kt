@@ -99,6 +99,7 @@ fun ClofApp(
 
             Column(
                 modifier = Modifier
+                    .fillMaxSize()
                     .padding(innerPadding)
             ) {
 
@@ -134,6 +135,7 @@ fun ClofApp(
 
             Column(
                 modifier = Modifier
+                    .fillMaxSize()
                     .padding(innerPadding)
             ) {
 
@@ -183,12 +185,13 @@ fun ClofApp(
                 onEdit = { movie ->
                     movieBeingEdited = movie
                 },
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
             )
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClofTopBar(
