@@ -274,6 +274,10 @@ fun MovieList(
         mutableStateOf("All")
     }
 
+    var collectionFilter by remember {
+        mutableStateOf("All")
+    }
+
     var sortOption by remember {
         mutableStateOf("Recently Added")
     }
@@ -281,6 +285,12 @@ fun MovieList(
     var showFilters by remember {
         mutableStateOf(false)
     }
+
+    val collections = movies
+        .map { it.collection }
+        .filter { it.isNotBlank() }
+        .distinct()
+        .sorted()
 
     val filteredMovies = movies
         .filter { movie ->
@@ -300,7 +310,14 @@ fun MovieList(
                 else -> true
             }
 
-            matchesSearch && matchesType && matchesWatched
+            val matchesCollection =
+                collectionFilter == "All" ||
+                        movie.collection == collectionFilter
+
+            matchesSearch &&
+                    matchesType &&
+                    matchesWatched &&
+                    matchesCollection
         }
         .let { list ->
             when (sortOption) {
@@ -438,6 +455,38 @@ fun MovieList(
             }
 
             Text(
+                text = "Collection",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(
+                    start = 12.dp,
+                    top = 12.dp
+                )
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterButton(
+                    text = "All",
+                    selected = collectionFilter == "All"
+                ) {
+                    collectionFilter = "All"
+                }
+
+                collections.forEach { collection ->
+                    FilterButton(
+                        text = collection,
+                        selected = collectionFilter == collection
+                    ) {
+                        collectionFilter = collection
+                    }
+                }
+            }
+
+            Text(
                 text = "Sort",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(
@@ -544,7 +593,6 @@ fun MovieList(
         }
     }
 }
-
 @Composable
 fun FilterButton(
     text: String,
