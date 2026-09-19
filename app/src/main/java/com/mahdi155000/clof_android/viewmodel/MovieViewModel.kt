@@ -75,4 +75,10 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             repository.previousEpisode(movie.id)
         }
     }
+
+    fun updateMovie(movie: MovieEntity) {
+        viewModelScope.launch {
+            repository.updateMovie(movie)
+        }
+    }
 }

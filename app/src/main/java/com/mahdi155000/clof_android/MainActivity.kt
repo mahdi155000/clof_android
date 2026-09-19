@@ -80,7 +80,13 @@ fun ClofApp(
         mutableStateOf(false)
     }
 
-    if (showAddMovieScreen) {
+    var movieBeingEdited by remember {
+        mutableStateOf<MovieEntity?>(null)
+    }
+
+    if (movieBeingEdited != null) {
+
+        val movie = movieBeingEdited!!
 
         Scaffold(
             topBar = {
@@ -92,7 +98,43 @@ fun ClofApp(
         ) { innerPadding ->
 
             Column(
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier
+                    .padding(innerPadding)
+            ) {
+
+                Button(
+                    onClick = {
+                        movieBeingEdited = null
+                    },
+                    modifier = Modifier.padding(12.dp)
+                ) {
+                    Text("Back")
+                }
+
+                EditMovieScreen(
+                    movie = movie,
+                    movieViewModel = movieViewModel,
+                    onMovieUpdated = {
+                        movieBeingEdited = null
+                    }
+                )
+            }
+        }
+
+    } else if (showAddMovieScreen) {
+
+        Scaffold(
+            topBar = {
+                ClofTopBar(
+                    darkMode = darkMode,
+                    onDarkModeChange = onDarkModeChange
+                )
+            }
+        ) { innerPadding ->
+
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding)
             ) {
 
                 Button(
@@ -138,6 +180,9 @@ fun ClofApp(
             MovieList(
                 movies = movies,
                 movieViewModel = movieViewModel,
+                onEdit = { movie ->
+                    movieBeingEdited = movie
+                },
                 modifier = Modifier.padding(innerPadding)
             )
         }
@@ -172,10 +217,12 @@ fun ClofTopBar(
     )
 }
 
+
 @Composable
 fun MovieList(
     movies: List<MovieEntity>,
     movieViewModel: MovieViewModel,
+    onEdit: (MovieEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (movies.isEmpty()) {
@@ -216,7 +263,8 @@ fun MovieList(
 
                 MovieItem(
                     movie = movie,
-                    movieViewModel = movieViewModel
+                    movieViewModel = movieViewModel,
+                    onEdit = onEdit
                 )
 
                 Spacer(
@@ -230,10 +278,12 @@ fun MovieList(
 @Composable
 fun MovieItem(
     movie: MovieEntity,
-    movieViewModel: MovieViewModel
+    movieViewModel: MovieViewModel,
+    onEdit: (MovieEntity) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
 
         Column(
@@ -284,6 +334,7 @@ fun MovieItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
 
+                // Watched / Unwatch
                 Button(
                     onClick = {
                         movieViewModel.setWatched(
@@ -301,6 +352,16 @@ fun MovieItem(
                     )
                 }
 
+                // Edit
+                Button(
+                    onClick = {
+                        onEdit(movie)
+                    }
+                ) {
+                    Text("Edit")
+                }
+
+                // Delete
                 Button(
                     onClick = {
                         movieViewModel.deleteMovie(movie)
