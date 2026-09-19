@@ -31,204 +31,134 @@ fun EditMovieScreen(
     movieViewModel: MovieViewModel,
     onMovieUpdated: () -> Unit
 ) {
-
-    var title by remember {
-        mutableStateOf(movie.title)
-    }
-
-    var genre by remember {
-        mutableStateOf(movie.genre)
-    }
-
-    var isSeries by remember {
-        mutableStateOf(movie.isSeries)
-    }
-
-    var season by remember {
-        mutableStateOf(movie.season.toString())
-    }
-
-    var episode by remember {
-        mutableStateOf(movie.episode.toString())
-    }
-
-    var isSaving by remember {
-        mutableStateOf(false)
-    }
+    var title by remember { mutableStateOf(movie.title) }
+    var genre by remember { mutableStateOf(movie.genre) }
+    var collection by remember { mutableStateOf(movie.collection) }
+    var isSeries by remember { mutableStateOf(movie.isSeries) }
+    var season by remember { mutableStateOf(movie.season.toString()) }
+    var episode by remember { mutableStateOf(movie.episode.toString()) }
+    var isSaving by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp)
     ) {
-
         Text("Edit Movie")
 
-        Spacer(
-            modifier =
-                Modifier.height(20.dp)
-        )
+        Spacer(modifier = Modifier.height(20.dp))
 
         OutlinedTextField(
             value = title,
-            onValueChange = {
-                title = it
-            },
-            modifier =
-                Modifier.fillMaxWidth(),
-            label = {
-                Text("Title")
-            },
+            onValueChange = { title = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Title") },
             singleLine = true,
             enabled = !isSaving
         )
 
-        Spacer(
-            modifier =
-                Modifier.height(12.dp)
-        )
+        Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = genre,
-            onValueChange = {
-                genre = it
-            },
-            modifier =
-                Modifier.fillMaxWidth(),
-            label = {
-                Text("Genre")
-            },
+            onValueChange = { genre = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Genre") },
             singleLine = true,
             enabled = !isSaving
         )
 
-        Spacer(
-            modifier =
-                Modifier.height(16.dp)
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = collection,
+            onValueChange = { collection = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Collection") },
+            singleLine = true,
+            enabled = !isSaving
         )
 
-        Row(
-            modifier =
-                Modifier.fillMaxWidth(),
-            verticalAlignment =
-                Alignment.CenterVertically,
-            horizontalArrangement =
-                Arrangement.SpaceBetween
-        ) {
+        Spacer(modifier = Modifier.height(16.dp))
 
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Text("Series")
 
             Switch(
                 checked = isSeries,
-                onCheckedChange = {
-                    isSeries = it
-                },
+                onCheckedChange = { isSeries = it },
                 enabled = !isSaving
             )
         }
 
         if (isSeries) {
-
-            Spacer(
-                modifier =
-                    Modifier.height(12.dp)
-            )
+            Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedTextField(
                 value = season,
-                onValueChange = {
-                    season = it
-                },
-                modifier =
-                    Modifier.fillMaxWidth(),
-                label = {
-                    Text("Season")
-                },
-                keyboardOptions =
-                    KeyboardOptions(
-                        keyboardType =
-                            KeyboardType.Number
-                    ),
+                onValueChange = { season = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Season") },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number
+                ),
                 singleLine = true,
                 enabled = !isSaving
             )
 
-            Spacer(
-                modifier =
-                    Modifier.height(12.dp)
-            )
+            Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedTextField(
                 value = episode,
-                onValueChange = {
-                    episode = it
-                },
-                modifier =
-                    Modifier.fillMaxWidth(),
-                label = {
-                    Text("Episode")
-                },
-                keyboardOptions =
-                    KeyboardOptions(
-                        keyboardType =
-                            KeyboardType.Number
-                    ),
+                onValueChange = { episode = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Episode") },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number
+                ),
                 singleLine = true,
                 enabled = !isSaving
             )
         }
 
-        Spacer(
-            modifier =
-                Modifier.height(24.dp)
-        )
+        Spacer(modifier = Modifier.height(24.dp))
 
         Button(
             onClick = {
-
-                if (
-                    title.isBlank() ||
-                    isSaving
-                ) {
+                if (title.isBlank() || isSaving) {
                     return@Button
                 }
 
                 isSaving = true
 
-                val updatedMovie =
-                    movie.copy(
-                        title = title.trim(),
-                        genre = genre.trim(),
-                        isSeries = isSeries,
-                        season =
-                            if (isSeries) {
-                                season.toIntOrNull()
-                                    ?: 1
-                            } else {
-                                0
-                            },
-                        episode =
-                            if (isSeries) {
-                                episode.toIntOrNull()
-                                    ?: 1
-                            } else {
-                                0
-                            }
-                    )
+                val updatedMovie = movie.copy(
+                    title = title.trim(),
+                    genre = genre.trim(),
+                    collection = collection.trim().ifBlank { "main" },
+                    isSeries = isSeries,
+                    season = if (isSeries) {
+                        season.toIntOrNull() ?: 1
+                    } else {
+                        0
+                    },
+                    episode = if (isSeries) {
+                        episode.toIntOrNull() ?: 1
+                    } else {
+                        0
+                    }
+                )
 
-                movieViewModel.updateMovie(
-                    updatedMovie
-                ) {
+                movieViewModel.updateMovie(updatedMovie) {
                     onMovieUpdated()
                 }
             },
-            modifier =
-                Modifier.fillMaxWidth(),
-            enabled =
-                title.isNotBlank() &&
-                        !isSaving
+            modifier = Modifier.fillMaxWidth(),
+            enabled = title.isNotBlank() && !isSaving
         ) {
-
             Text(
                 if (isSaving) {
                     "Saving..."
