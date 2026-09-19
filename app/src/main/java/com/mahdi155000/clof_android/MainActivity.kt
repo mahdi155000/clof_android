@@ -34,6 +34,22 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mahdi155000.clof_android.data.MovieEntity
 import com.mahdi155000.clof_android.viewmodel.MovieViewModel
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.dp
 
 class MainActivity : ComponentActivity() {
 
@@ -228,52 +244,101 @@ fun MovieList(
     onEdit: (MovieEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    if (movies.isEmpty()) {
+    var searchText by remember {
+        mutableStateOf("")
+    }
 
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "No movies yet",
-                style = MaterialTheme.typography.headlineSmall
-            )
+    val filteredMovies = movies.filter { movie ->
+        movie.title.contains(
+            searchText,
+            ignoreCase = true
+        ) || movie.genre.contains(
+            searchText,
+            ignoreCase = true
+        )
+    }
 
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
+    Column(
+        modifier = modifier.fillMaxSize()
+    ) {
 
-            Text(
-                text = "Press + to add a movie."
-            )
-        }
+        OutlinedTextField(
+            value = searchText,
+            onValueChange = { searchText = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = 12.dp,
+                    vertical = 8.dp
+                ),
+            label = {
+                Text("Search")
+            },
+            placeholder = {
+                Text("Search movies and series")
+            },
+            singleLine = true
+        )
 
-    } else {
+        if (filteredMovies.isEmpty()) {
 
-        LazyColumn(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(12.dp)
-        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.Center
+            ) {
 
-            items(
-                items = movies,
-                key = { movie ->
-                    movie.id
-                }
-            ) { movie ->
-
-                MovieItem(
-                    movie = movie,
-                    movieViewModel = movieViewModel,
-                    onEdit = onEdit
+                Text(
+                    text = if (searchText.isBlank()) {
+                        "No movies yet"
+                    } else {
+                        "No results found"
+                    },
+                    style = MaterialTheme.typography.headlineSmall
                 )
 
                 Spacer(
-                    modifier = Modifier.height(12.dp)
+                    modifier = Modifier.height(8.dp)
                 )
+
+                Text(
+                    text = if (searchText.isBlank()) {
+                        "Press + to add a movie."
+                    } else {
+                        "Try a different search."
+                    }
+                )
+            }
+
+        } else {
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = 12.dp,
+                    end = 12.dp,
+                    bottom = 12.dp
+                )
+            ) {
+
+                items(
+                    items = filteredMovies,
+                    key = { movie ->
+                        movie.id
+                    }
+                ) { movie ->
+
+                    MovieItem(
+                        movie = movie,
+                        movieViewModel = movieViewModel,
+                        onEdit = onEdit
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
+                }
             }
         }
     }
