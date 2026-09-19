@@ -236,7 +236,6 @@ fun MovieList(
                 .padding(24.dp),
             verticalArrangement = Arrangement.Center
         ) {
-
             Text(
                 text = "No movies yet",
                 style = MaterialTheme.typography.headlineSmall
@@ -261,7 +260,9 @@ fun MovieList(
 
             items(
                 items = movies,
-                key = { movie -> movie.id }
+                key = { movie ->
+                    movie.id
+                }
             ) { movie ->
 
                 MovieItem(
@@ -271,13 +272,12 @@ fun MovieList(
                 )
 
                 Spacer(
-                    modifier = Modifier.height(8.dp)
+                    modifier = Modifier.height(12.dp)
                 )
             }
         }
     }
 }
-
 @Composable
 fun MovieItem(
     movie: MovieEntity,
@@ -286,26 +286,56 @@ fun MovieItem(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
     ) {
-
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
 
+            // Title
             Text(
                 text = movie.title,
                 style = MaterialTheme.typography.titleLarge
             )
 
-            if (movie.genre.isNotBlank()) {
+            Spacer(
+                modifier = Modifier.height(6.dp)
+            )
 
+            // Genre
+            if (movie.genre.isNotBlank()) {
+                Text(
+                    text = movie.genre,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Spacer(
+                    modifier = Modifier.height(6.dp)
+                )
+            }
+
+            // Type
+            Text(
+                text = if (movie.isSeries) {
+                    "Series"
+                } else {
+                    "Movie"
+                },
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            // Series information
+            if (movie.isSeries) {
                 Spacer(
                     modifier = Modifier.height(4.dp)
                 )
 
                 Text(
-                    text = movie.genre
+                    text = "Season ${movie.season} • Episode ${movie.episode}",
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
 
@@ -313,31 +343,26 @@ fun MovieItem(
                 modifier = Modifier.height(8.dp)
             )
 
-            if (movie.isSeries) {
-
-                Text(
-                    text = "S${movie.season} E${movie.episode}"
-                )
-            }
-
+            // Watched status
             Text(
                 text = if (movie.watched) {
                     "Watched"
                 } else {
                     "Not watched"
-                }
+                },
+                style = MaterialTheme.typography.bodyMedium
             )
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier = Modifier.height(16.dp)
             )
 
+            // Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
 
-                // Watched / Unwatch
                 Button(
                     onClick = {
                         movieViewModel.setWatched(
@@ -347,7 +372,7 @@ fun MovieItem(
                     }
                 ) {
                     Text(
-                        if (movie.watched) {
+                        text = if (movie.watched) {
                             "Unwatch"
                         } else {
                             "Watched"
@@ -355,7 +380,6 @@ fun MovieItem(
                     )
                 }
 
-                // Edit
                 Button(
                     onClick = {
                         onEdit(movie)
@@ -364,7 +388,6 @@ fun MovieItem(
                     Text("Edit")
                 }
 
-                // Delete
                 Button(
                     onClick = {
                         movieViewModel.deleteMovie(movie)
