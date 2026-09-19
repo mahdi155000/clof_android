@@ -14,6 +14,9 @@ interface MovieDao {
     fun getAllMovies(): Flow<List<MovieEntity>>
 
     @Query("SELECT * FROM movies WHERE id = :id")
+    fun observeMovie(id: Int): Flow<MovieEntity?>
+
+    @Query("SELECT * FROM movies WHERE id = :id")
     suspend fun getMovie(id: Int): MovieEntity?
 
     @Insert

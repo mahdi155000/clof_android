@@ -31,6 +31,7 @@ fun EditMovieScreen(
     movieViewModel: MovieViewModel,
     onMovieUpdated: () -> Unit
 ) {
+
     var title by remember {
         mutableStateOf(movie.title)
     }
@@ -51,6 +52,10 @@ fun EditMovieScreen(
         mutableStateOf(movie.episode.toString())
     }
 
+    var isSaving by remember {
+        mutableStateOf(false)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -60,7 +65,8 @@ fun EditMovieScreen(
         Text("Edit Movie")
 
         Spacer(
-            modifier = Modifier.height(20.dp)
+            modifier =
+                Modifier.height(20.dp)
         )
 
         OutlinedTextField(
@@ -68,15 +74,18 @@ fun EditMovieScreen(
             onValueChange = {
                 title = it
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier.fillMaxWidth(),
             label = {
                 Text("Title")
             },
-            singleLine = true
+            singleLine = true,
+            enabled = !isSaving
         )
 
         Spacer(
-            modifier = Modifier.height(12.dp)
+            modifier =
+                Modifier.height(12.dp)
         )
 
         OutlinedTextField(
@@ -84,21 +93,27 @@ fun EditMovieScreen(
             onValueChange = {
                 genre = it
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier.fillMaxWidth(),
             label = {
                 Text("Genre")
             },
-            singleLine = true
+            singleLine = true,
+            enabled = !isSaving
         )
 
         Spacer(
-            modifier = Modifier.height(16.dp)
+            modifier =
+                Modifier.height(16.dp)
         )
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier =
+                Modifier.fillMaxWidth(),
+            verticalAlignment =
+                Alignment.CenterVertically,
+            horizontalArrangement =
+                Arrangement.SpaceBetween
         ) {
 
             Text("Series")
@@ -107,14 +122,16 @@ fun EditMovieScreen(
                 checked = isSeries,
                 onCheckedChange = {
                     isSeries = it
-                }
+                },
+                enabled = !isSaving
             )
         }
 
         if (isSeries) {
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier =
+                    Modifier.height(12.dp)
             )
 
             OutlinedTextField(
@@ -122,18 +139,23 @@ fun EditMovieScreen(
                 onValueChange = {
                     season = it
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 label = {
                     Text("Season")
                 },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number
-                ),
-                singleLine = true
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType =
+                            KeyboardType.Number
+                    ),
+                singleLine = true,
+                enabled = !isSaving
             )
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier =
+                    Modifier.height(12.dp)
             )
 
             OutlinedTextField(
@@ -141,50 +163,79 @@ fun EditMovieScreen(
                 onValueChange = {
                     episode = it
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 label = {
                     Text("Episode")
                 },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number
-                ),
-                singleLine = true
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType =
+                            KeyboardType.Number
+                    ),
+                singleLine = true,
+                enabled = !isSaving
             )
         }
 
         Spacer(
-            modifier = Modifier.height(24.dp)
+            modifier =
+                Modifier.height(24.dp)
         )
 
         Button(
             onClick = {
 
-                if (title.isNotBlank()) {
+                if (
+                    title.isBlank() ||
+                    isSaving
+                ) {
+                    return@Button
+                }
 
-                    val updatedMovie = movie.copy(
+                isSaving = true
+
+                val updatedMovie =
+                    movie.copy(
                         title = title.trim(),
                         genre = genre.trim(),
                         isSeries = isSeries,
-                        season = if (isSeries) {
-                            season.toIntOrNull() ?: 1
-                        } else {
-                            0
-                        },
-                        episode = if (isSeries) {
-                            episode.toIntOrNull() ?: 1
-                        } else {
-                            0
-                        }
+                        season =
+                            if (isSeries) {
+                                season.toIntOrNull()
+                                    ?: 1
+                            } else {
+                                0
+                            },
+                        episode =
+                            if (isSeries) {
+                                episode.toIntOrNull()
+                                    ?: 1
+                            } else {
+                                0
+                            }
                     )
 
-                    movieViewModel.updateMovie(updatedMovie)
-
+                movieViewModel.updateMovie(
+                    updatedMovie
+                ) {
                     onMovieUpdated()
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier =
+                Modifier.fillMaxWidth(),
+            enabled =
+                title.isNotBlank() &&
+                        !isSaving
         ) {
-            Text("Save Changes")
+
+            Text(
+                if (isSaving) {
+                    "Saving..."
+                } else {
+                    "Save Changes"
+                }
+            )
         }
     }
 }

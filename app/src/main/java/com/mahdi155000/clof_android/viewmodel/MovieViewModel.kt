@@ -6,18 +6,23 @@ import androidx.lifecycle.viewModelScope
 import com.mahdi155000.clof_android.data.AppDatabase
 import com.mahdi155000.clof_android.data.MovieEntity
 import com.mahdi155000.clof_android.data.MovieRepository
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class MovieViewModel(application: Application) : AndroidViewModel(application) {
+class MovieViewModel(
+    application: Application
+) : AndroidViewModel(application) {
 
-    private val database = AppDatabase.getDatabase(application)
+    private val database =
+        AppDatabase.getDatabase(application)
 
-    private val repository = MovieRepository(
-        database.movieDao()
-    )
+    private val repository =
+        MovieRepository(
+            database.movieDao()
+        )
 
     val movies: StateFlow<List<MovieEntity>> =
         repository.allMovies.stateIn(
@@ -26,14 +31,22 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             initialValue = emptyList()
         )
 
+    fun observeMovie(
+        id: Int
+    ): Flow<MovieEntity?> {
+        return repository.observeMovie(id)
+    }
+
     fun addMovie(
         title: String,
         genre: String = "",
         isSeries: Boolean = false,
         season: Int = 0,
-        episode: Int = 0
+        episode: Int = 0,
+        onComplete: () -> Unit = {}
     ) {
         viewModelScope.launch {
+
             repository.insertMovie(
                 MovieEntity(
                     title = title,
@@ -43,12 +56,20 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
                     episode = episode
                 )
             )
+
+            onComplete()
         }
     }
 
-    fun deleteMovie(movie: MovieEntity) {
+    fun deleteMovie(
+        movie: MovieEntity,
+        onComplete: () -> Unit = {}
+    ) {
         viewModelScope.launch {
+
             repository.deleteMovie(movie)
+
+            onComplete()
         }
     }
 
@@ -57,6 +78,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         watched: Boolean
     ) {
         viewModelScope.launch {
+
             repository.setWatched(
                 movie.id,
                 watched
@@ -64,21 +86,37 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun nextEpisode(movie: MovieEntity) {
+    fun nextEpisode(
+        movie: MovieEntity
+    ) {
         viewModelScope.launch {
-            repository.nextEpisode(movie.id)
+
+            repository.nextEpisode(
+                movie.id
+            )
         }
     }
 
-    fun previousEpisode(movie: MovieEntity) {
+    fun previousEpisode(
+        movie: MovieEntity
+    ) {
         viewModelScope.launch {
-            repository.previousEpisode(movie.id)
+
+            repository.previousEpisode(
+                movie.id
+            )
         }
     }
 
-    fun updateMovie(movie: MovieEntity) {
+    fun updateMovie(
+        movie: MovieEntity,
+        onComplete: () -> Unit = {}
+    ) {
         viewModelScope.launch {
+
             repository.updateMovie(movie)
+
+            onComplete()
         }
     }
 }

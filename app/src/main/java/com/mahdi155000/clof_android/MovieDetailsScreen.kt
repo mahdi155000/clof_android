@@ -11,19 +11,48 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.mahdi155000.clof_android.data.MovieEntity
 import com.mahdi155000.clof_android.viewmodel.MovieViewModel
-
 
 @Composable
 fun MovieDetailsScreen(
-    movie: MovieEntity,
+    movieId: Int,
     movieViewModel: MovieViewModel,
     onBack: () -> Unit,
     onEdit: () -> Unit
 ) {
+    val movie by movieViewModel
+        .observeMovie(movieId)
+        .collectAsState(initial = null)
+
+    if (movie == null) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("Movie not found")
+
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
+
+            Button(
+                onClick = onBack
+            ) {
+                Text("Back")
+            }
+        }
+
+        return
+    }
+
+    val currentMovie = movie!!
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -31,7 +60,6 @@ fun MovieDetailsScreen(
         verticalArrangement = Arrangement.Top
     ) {
 
-        // Back button
         Button(
             onClick = onBack
         ) {
@@ -42,9 +70,8 @@ fun MovieDetailsScreen(
             modifier = Modifier.height(24.dp)
         )
 
-        // Title
         Text(
-            text = movie.title,
+            text = currentMovie.title,
             style = MaterialTheme.typography.headlineMedium
         )
 
@@ -52,11 +79,9 @@ fun MovieDetailsScreen(
             modifier = Modifier.height(16.dp)
         )
 
-        // Genre
-        if (movie.genre.isNotBlank()) {
-
+        if (currentMovie.genre.isNotBlank()) {
             Text(
-                text = "Genre: ${movie.genre}",
+                text = "Genre: ${currentMovie.genre}",
                 style = MaterialTheme.typography.bodyLarge
             )
 
@@ -65,9 +90,8 @@ fun MovieDetailsScreen(
             )
         }
 
-        // Type
         Text(
-            text = if (movie.isSeries) {
+            text = if (currentMovie.isSeries) {
                 "Type: Series"
             } else {
                 "Type: Movie"
@@ -79,11 +103,10 @@ fun MovieDetailsScreen(
             modifier = Modifier.height(8.dp)
         )
 
-        // Series information
-        if (movie.isSeries) {
+        if (currentMovie.isSeries) {
 
             Text(
-                text = "Season: ${movie.season}",
+                text = "Season: ${currentMovie.season}",
                 style = MaterialTheme.typography.bodyLarge
             )
 
@@ -92,7 +115,7 @@ fun MovieDetailsScreen(
             )
 
             Text(
-                text = "Episode: ${movie.episode}",
+                text = "Episode: ${currentMovie.episode}",
                 style = MaterialTheme.typography.bodyLarge
             )
 
@@ -101,9 +124,8 @@ fun MovieDetailsScreen(
             )
         }
 
-        // Watched status
         Text(
-            text = if (movie.watched) {
+            text = if (currentMovie.watched) {
                 "Status: Watched"
             } else {
                 "Status: Not watched"
@@ -115,9 +137,8 @@ fun MovieDetailsScreen(
             modifier = Modifier.height(8.dp)
         )
 
-        // Collection
         Text(
-            text = "Collection: ${movie.collection}",
+            text = "Collection: ${currentMovie.collection}",
             style = MaterialTheme.typography.bodyLarge
         )
 
@@ -125,18 +146,17 @@ fun MovieDetailsScreen(
             modifier = Modifier.height(24.dp)
         )
 
-        // Watched button
         Button(
             onClick = {
                 movieViewModel.setWatched(
-                    movie,
-                    !movie.watched
+                    currentMovie,
+                    !currentMovie.watched
                 )
             },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = if (movie.watched) {
+                if (currentMovie.watched) {
                     "Mark as Unwatched"
                 } else {
                     "Mark as Watched"
@@ -148,7 +168,6 @@ fun MovieDetailsScreen(
             modifier = Modifier.height(12.dp)
         )
 
-        // Edit
         Button(
             onClick = onEdit,
             modifier = Modifier.fillMaxWidth()
@@ -160,11 +179,12 @@ fun MovieDetailsScreen(
             modifier = Modifier.height(12.dp)
         )
 
-        // Delete
         Button(
             onClick = {
-                movieViewModel.deleteMovie(movie)
-                onBack()
+                movieViewModel.deleteMovie(
+                    currentMovie,
+                    onComplete = onBack
+                )
             },
             modifier = Modifier.fillMaxWidth()
         ) {

@@ -9,6 +9,10 @@ class MovieRepository(
     val allMovies: Flow<List<MovieEntity>> =
         movieDao.getAllMovies()
 
+    fun observeMovie(id: Int): Flow<MovieEntity?> {
+        return movieDao.observeMovie(id)
+    }
+
     suspend fun getMovie(id: Int): MovieEntity? {
         return movieDao.getMovie(id)
     }
@@ -25,8 +29,14 @@ class MovieRepository(
         movieDao.deleteMovie(movie)
     }
 
-    suspend fun setWatched(id: Int, watched: Boolean) {
-        movieDao.setWatched(id, watched)
+    suspend fun setWatched(
+        id: Int,
+        watched: Boolean
+    ) {
+        movieDao.setWatched(
+            id,
+            watched
+        )
     }
 
     suspend fun nextEpisode(id: Int) {

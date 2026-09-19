@@ -38,22 +38,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mahdi155000.clof_android.data.MovieEntity
 import com.mahdi155000.clof_android.viewmodel.MovieViewModel
 
-
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         enableEdgeToEdge()
 
         val settingsManager = SettingsManager(this)
 
         setContent {
-
             var darkMode by remember {
-                mutableStateOf(
-                    settingsManager.isDarkMode()
-                )
+                mutableStateOf(settingsManager.isDarkMode())
             }
 
             MaterialTheme(
@@ -63,7 +58,6 @@ class MainActivity : ComponentActivity() {
                     androidx.compose.material3.lightColorScheme()
                 }
             ) {
-
                 ClofApp(
                     darkMode = darkMode,
                     onDarkModeChange = { enabled ->
@@ -76,7 +70,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
 @Composable
 fun ClofApp(
     darkMode: Boolean,
@@ -87,16 +80,15 @@ fun ClofApp(
         mutableStateOf(false)
     }
 
-    var movieBeingEdited by remember {
-        mutableStateOf<MovieEntity?>(null)
-    }
-
     var movieBeingViewed by remember {
         mutableStateOf<MovieEntity?>(null)
     }
 
-    if (movieBeingViewed != null) {
+    var movieBeingEdited by remember {
+        mutableStateOf<MovieEntity?>(null)
+    }
 
+    if (movieBeingViewed != null) {
         val movie = movieBeingViewed!!
 
         Scaffold(
@@ -107,28 +99,31 @@ fun ClofApp(
                 )
             }
         ) { innerPadding ->
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-
                 MovieDetailsScreen(
-                    movie = movie,
+                    movieId = movie.id,
                     movieViewModel = movieViewModel,
                     onBack = {
                         movieBeingViewed = null
                     },
                     onEdit = {
-                        movieBeingViewed = null
                         movieBeingEdited = movie
+                        movieBeingViewed = null
                     }
                 )
             }
         }
 
-    } else if (movieBeingEdited != null) {
+        return
+    }
+
+    if (movieBeingEdited != null) {
+        val movie = movieBeingEdited!!
+
         Scaffold(
             topBar = {
                 ClofTopBar(
@@ -137,13 +132,47 @@ fun ClofApp(
                 )
             }
         ) { innerPadding ->
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
+                Button(
+                    onClick = {
+                        movieBeingEdited = null
+                    },
+                    modifier = Modifier.padding(12.dp)
+                ) {
+                    Text("Back")
+                }
 
+                EditMovieScreen(
+                    movie = movie,
+                    movieViewModel = movieViewModel,
+                    onMovieUpdated = {
+                        movieBeingEdited = null
+                    }
+                )
+            }
+        }
+
+        return
+    }
+
+    if (showAddMovieScreen) {
+        Scaffold(
+            topBar = {
+                ClofTopBar(
+                    darkMode = darkMode,
+                    onDarkModeChange = onDarkModeChange
+                )
+            }
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
                 Button(
                     onClick = {
                         showAddMovieScreen = false
@@ -162,45 +191,43 @@ fun ClofApp(
             }
         }
 
-    } else {
+        return
+    }
 
-        val movies by movieViewModel.movies.collectAsState()
+    val movies by movieViewModel.movies.collectAsState()
 
-        Scaffold(
-            topBar = {
-                ClofTopBar(
-                    darkMode = darkMode,
-                    onDarkModeChange = onDarkModeChange
-                )
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = {
-                        showAddMovieScreen = true
-                    }
-                ) {
-                    Text("+")
-                }
-            }
-        ) { innerPadding ->
-
-            MovieList(
-                movies = movies,
-                movieViewModel = movieViewModel,
-                onEdit = { movie ->
-                    movieBeingEdited = movie
-                },
-                onMovieClick = { movie ->
-                    movieBeingViewed = movie
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
+    Scaffold(
+        topBar = {
+            ClofTopBar(
+                darkMode = darkMode,
+                onDarkModeChange = onDarkModeChange
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    showAddMovieScreen = true
+                }
+            ) {
+                Text("+")
+            }
         }
+    ) { innerPadding ->
+        MovieList(
+            movies = movies,
+            movieViewModel = movieViewModel,
+            onMovieClick = { movie ->
+                movieBeingViewed = movie
+            },
+            onEdit = { movie ->
+                movieBeingEdited = movie
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        )
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -213,14 +240,11 @@ fun ClofTopBar(
             Text("CLOF")
         },
         actions = {
-
             Row(
                 modifier = Modifier.padding(end = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
                 Text("Dark")
-
                 Switch(
                     checked = darkMode,
                     onCheckedChange = onDarkModeChange
@@ -230,13 +254,12 @@ fun ClofTopBar(
     )
 }
 
-
 @Composable
 fun MovieList(
     movies: List<MovieEntity>,
     movieViewModel: MovieViewModel,
-    onEdit: (MovieEntity) -> Unit,
     onMovieClick: (MovieEntity) -> Unit,
+    onEdit: (MovieEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var searchText by remember {
@@ -261,61 +284,40 @@ fun MovieList(
 
     val filteredMovies = movies
         .filter { movie ->
-
             val matchesSearch =
-                movie.title.contains(
-                    searchText,
-                    ignoreCase = true
-                ) ||
-                        movie.genre.contains(
-                            searchText,
-                            ignoreCase = true
-                        )
+                movie.title.contains(searchText, ignoreCase = true) ||
+                        movie.genre.contains(searchText, ignoreCase = true)
 
-            val matchesType =
-                when (typeFilter) {
-                    "Movies" -> !movie.isSeries
-                    "Series" -> movie.isSeries
-                    else -> true
-                }
+            val matchesType = when (typeFilter) {
+                "Movies" -> !movie.isSeries
+                "Series" -> movie.isSeries
+                else -> true
+            }
 
-            val matchesWatched =
-                when (watchedFilter) {
-                    "Watched" -> movie.watched
-                    "Unwatched" -> !movie.watched
-                    else -> true
-                }
+            val matchesWatched = when (watchedFilter) {
+                "Watched" -> movie.watched
+                "Unwatched" -> !movie.watched
+                else -> true
+            }
 
-            matchesSearch &&
-                    matchesType &&
-                    matchesWatched
+            matchesSearch && matchesType && matchesWatched
         }
         .let { list ->
-
             when (sortOption) {
-
-                "Title A-Z" -> {
-                    list.sortedBy {
-                        it.title.lowercase()
-                    }
+                "Title A-Z" -> list.sortedBy {
+                    it.title.lowercase()
                 }
 
-                "Title Z-A" -> {
-                    list.sortedByDescending {
-                        it.title.lowercase()
-                    }
+                "Title Z-A" -> list.sortedByDescending {
+                    it.title.lowercase()
                 }
 
-                "Oldest Added" -> {
-                    list.sortedBy {
-                        it.id
-                    }
+                "Oldest Added" -> list.sortedBy {
+                    it.id
                 }
 
-                else -> {
-                    list.sortedByDescending {
-                        it.id
-                    }
+                else -> list.sortedByDescending {
+                    it.id
                 }
             }
         }
@@ -323,8 +325,6 @@ fun MovieList(
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-
-        // Search
         OutlinedTextField(
             value = searchText,
             onValueChange = {
@@ -345,7 +345,6 @@ fun MovieList(
             singleLine = true
         )
 
-        // Filter button
         Button(
             onClick = {
                 showFilters = !showFilters
@@ -364,8 +363,6 @@ fun MovieList(
         }
 
         if (showFilters) {
-
-            // Type filter
             Text(
                 text = "Type",
                 style = MaterialTheme.typography.titleMedium,
@@ -381,7 +378,6 @@ fun MovieList(
                     .padding(horizontal = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-
                 FilterButton(
                     text = "All",
                     selected = typeFilter == "All"
@@ -404,7 +400,6 @@ fun MovieList(
                 }
             }
 
-            // Watched filter
             Text(
                 text = "Watched",
                 style = MaterialTheme.typography.titleMedium,
@@ -420,7 +415,6 @@ fun MovieList(
                     .padding(horizontal = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-
                 FilterButton(
                     text = "All",
                     selected = watchedFilter == "All"
@@ -443,7 +437,6 @@ fun MovieList(
                 }
             }
 
-            // Sort
             Text(
                 text = "Sort",
                 style = MaterialTheme.typography.titleMedium,
@@ -459,7 +452,6 @@ fun MovieList(
                     .padding(horizontal = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-
                 FilterButton(
                     text = "Recent",
                     selected = sortOption == "Recently Added"
@@ -494,16 +486,13 @@ fun MovieList(
             )
         }
 
-        // Movie list
         if (filteredMovies.isEmpty()) {
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(24.dp),
                 verticalArrangement = Arrangement.Center
             ) {
-
                 Text(
                     text = if (movies.isEmpty()) {
                         "No movies yet"
@@ -525,9 +514,7 @@ fun MovieList(
                     }
                 )
             }
-
         } else {
-
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
@@ -536,19 +523,17 @@ fun MovieList(
                     bottom = 12.dp
                 )
             ) {
-
                 items(
                     items = filteredMovies,
                     key = { movie ->
                         movie.id
                     }
                 ) { movie ->
-
                     MovieItem(
                         movie = movie,
                         movieViewModel = movieViewModel,
-                        onEdit = onEdit,
-                        onMovieClick = onMovieClick
+                        onMovieClick = onMovieClick,
+                        onEdit = onEdit
                     )
 
                     Spacer(
@@ -560,7 +545,6 @@ fun MovieList(
     }
 }
 
-
 @Composable
 fun FilterButton(
     text: String,
@@ -571,7 +555,7 @@ fun FilterButton(
         onClick = onClick
     ) {
         Text(
-            text = if (selected) {
+            if (selected) {
                 "✓ $text"
             } else {
                 text
@@ -580,13 +564,12 @@ fun FilterButton(
     }
 }
 
-
 @Composable
 fun MovieItem(
     movie: MovieEntity,
     movieViewModel: MovieViewModel,
-    onEdit: (MovieEntity) -> Unit,
     onMovieClick: (MovieEntity) -> Unit,
+    onEdit: (MovieEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -600,7 +583,6 @@ fun MovieItem(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-
             Text(
                 text = movie.title,
                 style = MaterialTheme.typography.titleLarge
@@ -611,7 +593,6 @@ fun MovieItem(
             )
 
             if (movie.genre.isNotBlank()) {
-
                 Text(
                     text = movie.genre,
                     style = MaterialTheme.typography.bodyMedium
@@ -632,7 +613,6 @@ fun MovieItem(
             )
 
             if (movie.isSeries) {
-
                 Spacer(
                     modifier = Modifier.height(4.dp)
                 )
@@ -664,7 +644,6 @@ fun MovieItem(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-
                 Button(
                     onClick = {
                         movieViewModel.setWatched(
@@ -674,7 +653,7 @@ fun MovieItem(
                     }
                 ) {
                     Text(
-                        text = if (movie.watched) {
+                        if (movie.watched) {
                             "Unwatch"
                         } else {
                             "Watched"
