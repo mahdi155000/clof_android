@@ -137,6 +137,7 @@ fun ClofApp(
     val closeDrawer: () -> Unit = { drawerScope.launch { drawerState.close() } }
     val collections by movieViewModel.collections.collectAsState()
     var selectedCollection by remember { mutableStateOf<String?>("main") }
+    var collectionsExpanded by remember { mutableStateOf(true) }
 
     val onImport = {
         if (!isImporting) {
@@ -192,33 +193,38 @@ fun ClofApp(
                         !showMoveMoviesScreen,
                     onClick = {
                         selectedCollection = null
+                        collectionsExpanded = !collectionsExpanded
                         showAddMovieScreen = false
                         movieBeingViewed = null
                         movieBeingEdited = null
                         showCollectionsScreen = false
                         showMoveMoviesScreen = false
                         showGenresScreen = false
+                        showTrashScreen = false
                         closeDrawer()
                     }
                 )
 
-                collections.forEach { collection ->
-                    NavigationDrawerItem(
-                        label = { Text(collection) },
-                        selected = selectedCollection == collection &&
-                            !showCollectionsScreen &&
-                            !showMoveMoviesScreen,
-                        onClick = {
-                            selectedCollection = collection
-                            showAddMovieScreen = false
-                            movieBeingViewed = null
-                            movieBeingEdited = null
-                            showCollectionsScreen = false
-                            showMoveMoviesScreen = false
-                            showGenresScreen = false
-                            closeDrawer()
-                        }
-                    )
+                if (collectionsExpanded) {
+                    collections.forEach { collection ->
+                        NavigationDrawerItem(
+                            label = { Text("  $collection") },
+                            selected = selectedCollection == collection &&
+                                !showCollectionsScreen &&
+                                !showMoveMoviesScreen,
+                            onClick = {
+                                selectedCollection = collection
+                                showAddMovieScreen = false
+                                movieBeingViewed = null
+                                movieBeingEdited = null
+                                showCollectionsScreen = false
+                                showMoveMoviesScreen = false
+                                showGenresScreen = false
+                                showTrashScreen = false
+                                closeDrawer()
+                            }
+                        )
+                    }
                 }
 
                 NavigationDrawerItem(
@@ -231,6 +237,7 @@ fun ClofApp(
                         showCollectionsScreen = true
                         showMoveMoviesScreen = false
                         showGenresScreen = false
+                        showTrashScreen = false
                         closeDrawer()
                     }
                 )
@@ -245,6 +252,7 @@ fun ClofApp(
                         showMoveMoviesScreen = true
                         showCollectionsScreen = false
                         showGenresScreen = false
+                        showTrashScreen = false
                         closeDrawer()
                     }
                 )
@@ -259,6 +267,7 @@ fun ClofApp(
                         showGenresScreen = true
                         showCollectionsScreen = false
                         showMoveMoviesScreen = false
+                        showTrashScreen = false
                         closeDrawer()
                     }
                 )
@@ -311,6 +320,10 @@ fun ClofApp(
                             if (selectedCollection == removedName) {
                                 selectedCollection = null
                             }
+                        },
+                        onViewCollection = { collection ->
+                            selectedCollection = collection
+                            showCollectionsScreen = false
                         }
                     )
                 }

@@ -28,7 +28,8 @@ fun CollectionsScreen(
     movieViewModel: MovieViewModel,
     onBack: () -> Unit,
     onCollectionRenamed: (oldName: String, newName: String) -> Unit = { _, _ -> },
-    onCollectionRemoved: (name: String) -> Unit = {}
+    onCollectionRemoved: (name: String) -> Unit = {},
+    onViewCollection: (name: String) -> Unit = {}
 ) {
     val collections by movieViewModel.collections.collectAsState()
     var newCollectionName by remember { mutableStateOf("") }
@@ -130,6 +131,11 @@ fun CollectionsScreen(
                     ) {
                         Text(collection, modifier = Modifier.padding(top = 12.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = { onViewCollection(collection) }
+                            ) {
+                                Text("View")
+                            }
                             Button(
                                 onClick = {
                                     editingCollection = collection
