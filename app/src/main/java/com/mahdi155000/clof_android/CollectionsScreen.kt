@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
@@ -100,65 +101,72 @@ fun CollectionsScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(
-                            onClick = {
-                                val name = editedName.trim()
-                                if (name.isNotEmpty()) {
-                                    movieViewModel.renameCollection(collection, name) { renamed ->
-                                        message = if (renamed) {
-                                            editingCollection = null
-                                            onCollectionRenamed(collection, name)
-                                            "Collection renamed."
-                                        } else {
-                                            "Use a new collection name."
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        item {
+                            Button(
+                                onClick = {
+                                    val name = editedName.trim()
+                                    if (name.isNotEmpty()) {
+                                        movieViewModel.renameCollection(collection, name) { renamed ->
+                                            message = if (renamed) {
+                                                editingCollection = null
+                                                onCollectionRenamed(collection, name)
+                                                "Collection renamed."
+                                            } else {
+                                                "Use a new collection name."
+                                            }
                                         }
                                     }
-                                }
-                            },
-                            enabled = editedName.isNotBlank()
-                        ) {
-                            Text("Save")
+                                },
+                                enabled = editedName.isNotBlank()
+                            ) {
+                                Text("Save")
+                            }
                         }
-                        Button(onClick = { editingCollection = null }) {
-                            Text("Cancel")
+                        item {
+                            Button(onClick = { editingCollection = null }) {
+                                Text("Cancel")
+                            }
                         }
                     }
                 } else {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         Text(collection, modifier = Modifier.padding(top = 12.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(
-                                onClick = { onViewCollection(collection) }
-                            ) {
-                                Text("View")
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            item {
+                                Button(
+                                    onClick = { onViewCollection(collection) }
+                                ) {
+                                    Text("View")
+                                }
                             }
-                            Button(
-                                onClick = {
-                                    editingCollection = collection
-                                    editedName = collection
-                                },
-                                enabled = collection != "main"
-                            ) {
-                                Text("Rename")
+                            item {
+                                Button(
+                                    onClick = {
+                                        editingCollection = collection
+                                        editedName = collection
+                                    },
+                                    enabled = collection != "main"
+                                ) {
+                                    Text("Rename")
+                                }
                             }
-                            Button(
-                                onClick = {
-                                    movieViewModel.removeCollection(collection) { removed ->
-                                        message = if (removed) {
-                                            onCollectionRemoved(collection)
-                                            "Collection removed; its movies moved to main."
-                                        } else {
-                                            "The main collection cannot be removed."
+                            item {
+                                Button(
+                                    onClick = {
+                                        movieViewModel.removeCollection(collection) { removed ->
+                                            message = if (removed) {
+                                                onCollectionRemoved(collection)
+                                                "Collection removed; its movies moved to main."
+                                            } else {
+                                                "The main collection cannot be removed."
+                                            }
                                         }
-                                    }
-                                },
-                                enabled = collection != "main"
-                            ) {
-                                Text("Remove")
+                                    },
+                                    enabled = collection != "main"
+                                ) {
+                                    Text("Remove")
+                                }
                             }
                         }
                     }

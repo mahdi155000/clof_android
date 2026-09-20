@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -43,6 +44,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -201,7 +203,6 @@ fun ClofApp(
                         showMoveMoviesScreen = false
                         showGenresScreen = false
                         showTrashScreen = false
-                        closeDrawer()
                     }
                 )
 
@@ -587,6 +588,7 @@ fun ClofApp(
                 },
                 onDelete = { movieToDelete = it },
                 selectedCollection = selectedCollection,
+                collectionNames = collections,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
@@ -646,6 +648,7 @@ fun MovieList(
     onEdit: (MovieEntity) -> Unit,
     onDelete: (MovieEntity) -> Unit,
     selectedCollection: String? = null,
+    collectionNames: List<String> = emptyList(),
     modifier: Modifier = Modifier
 ) {
     var searchText by remember {
@@ -672,8 +675,7 @@ fun MovieList(
         mutableStateOf(false)
     }
 
-    val collections = movies
-        .map { it.collection }
+    val collections = collectionNames
         .filter { it.isNotBlank() }
         .distinct()
         .sorted()
@@ -787,31 +789,36 @@ fun MovieList(
                 )
             )
 
-            Row(
+            LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = 0.dp)
             ) {
-                FilterButton(
-                    text = "All",
-                    selected = typeFilter == "All"
-                ) {
-                    typeFilter = "All"
+                item {
+                    FilterButton(
+                        text = "All",
+                        selected = typeFilter == "All"
+                    ) {
+                        typeFilter = "All"
+                    }
                 }
-
-                FilterButton(
-                    text = "Movies",
-                    selected = typeFilter == "Movies"
-                ) {
-                    typeFilter = "Movies"
+                item {
+                    FilterButton(
+                        text = "Movies",
+                        selected = typeFilter == "Movies"
+                    ) {
+                        typeFilter = "Movies"
+                    }
                 }
-
-                FilterButton(
-                    text = "Series",
-                    selected = typeFilter == "Series"
-                ) {
-                    typeFilter = "Series"
+                item {
+                    FilterButton(
+                        text = "Series",
+                        selected = typeFilter == "Series"
+                    ) {
+                        typeFilter = "Series"
+                    }
                 }
             }
 
@@ -824,31 +831,35 @@ fun MovieList(
                 )
             )
 
-            Row(
+            LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilterButton(
-                    text = "All",
-                    selected = watchedFilter == "All"
-                ) {
-                    watchedFilter = "All"
+                item {
+                    FilterButton(
+                        text = "All",
+                        selected = watchedFilter == "All"
+                    ) {
+                        watchedFilter = "All"
+                    }
                 }
-
-                FilterButton(
-                    text = "Watched",
-                    selected = watchedFilter == "Watched"
-                ) {
-                    watchedFilter = "Watched"
+                item {
+                    FilterButton(
+                        text = "Watched",
+                        selected = watchedFilter == "Watched"
+                    ) {
+                        watchedFilter = "Watched"
+                    }
                 }
-
-                FilterButton(
-                    text = "Unwatched",
-                    selected = watchedFilter == "Unwatched"
-                ) {
-                    watchedFilter = "Unwatched"
+                item {
+                    FilterButton(
+                        text = "Unwatched",
+                        selected = watchedFilter == "Unwatched"
+                    ) {
+                        watchedFilter = "Unwatched"
+                    }
                 }
             }
 
@@ -898,38 +909,43 @@ fun MovieList(
                 )
             )
 
-            Row(
+            LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilterButton(
-                    text = "Recent",
-                    selected = sortOption == "Recently Added"
-                ) {
-                    sortOption = "Recently Added"
+                item {
+                    FilterButton(
+                        text = "Recent",
+                        selected = sortOption == "Recently Added"
+                    ) {
+                        sortOption = "Recently Added"
+                    }
                 }
-
-                FilterButton(
-                    text = "Oldest",
-                    selected = sortOption == "Oldest Added"
-                ) {
-                    sortOption = "Oldest Added"
+                item {
+                    FilterButton(
+                        text = "Oldest",
+                        selected = sortOption == "Oldest Added"
+                    ) {
+                        sortOption = "Oldest Added"
+                    }
                 }
-
-                FilterButton(
-                    text = "A-Z",
-                    selected = sortOption == "Title A-Z"
-                ) {
-                    sortOption = "Title A-Z"
+                item {
+                    FilterButton(
+                        text = "A-Z",
+                        selected = sortOption == "Title A-Z"
+                    ) {
+                        sortOption = "Title A-Z"
+                    }
                 }
-
-                FilterButton(
-                    text = "Z-A",
-                    selected = sortOption == "Title Z-A"
-                ) {
-                    sortOption = "Title Z-A"
+                item {
+                    FilterButton(
+                        text = "Z-A",
+                        selected = sortOption == "Title Z-A"
+                    ) {
+                        sortOption = "Title Z-A"
+                    }
                 }
             }
 
@@ -1096,7 +1112,9 @@ fun MovieItem(
             )
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Button(
