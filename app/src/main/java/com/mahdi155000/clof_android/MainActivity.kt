@@ -93,6 +93,8 @@ fun ClofApp(
         mutableStateOf<MovieEntity?>(null)
     }
 
+    var showCollectionsScreen by remember { mutableStateOf(false) }
+
     var isImporting by remember { mutableStateOf(false) }
     var importMessage by remember { mutableStateOf<String?>(null) }
     val importLauncher = rememberLauncherForActivityResult(
@@ -135,13 +137,41 @@ fun ClofApp(
     }
 
     BackHandler(
-        enabled = showAddMovieScreen || movieBeingViewed != null || movieBeingEdited != null
+        enabled = showAddMovieScreen || movieBeingViewed != null ||
+            movieBeingEdited != null || showCollectionsScreen
     ) {
         when {
+            showCollectionsScreen -> showCollectionsScreen = false
             movieBeingViewed != null -> movieBeingViewed = null
             movieBeingEdited != null -> movieBeingEdited = null
             else -> showAddMovieScreen = false
         }
+    }
+
+    if (showCollectionsScreen) {
+        Scaffold(
+            topBar = {
+                ClofTopBar(
+                    darkMode = darkMode,
+                    onDarkModeChange = onDarkModeChange,
+                    onImport = onImport,
+                    isImporting = isImporting,
+                    onManageCollections = { showCollectionsScreen = true }
+                )
+            }
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                CollectionsScreen(
+                    movieViewModel = movieViewModel,
+                    onBack = { showCollectionsScreen = false }
+                )
+            }
+        }
+        return
     }
 
     if (movieBeingViewed != null) {
@@ -153,7 +183,8 @@ fun ClofApp(
                     darkMode = darkMode,
                     onDarkModeChange = onDarkModeChange,
                     onImport = onImport,
-                    isImporting = isImporting
+                    isImporting = isImporting,
+                    onManageCollections = { showCollectionsScreen = true }
                 )
             }
         ) { innerPadding ->
@@ -188,7 +219,8 @@ fun ClofApp(
                     darkMode = darkMode,
                     onDarkModeChange = onDarkModeChange,
                     onImport = onImport,
-                    isImporting = isImporting
+                    isImporting = isImporting,
+                    onManageCollections = { showCollectionsScreen = true }
                 )
             }
         ) { innerPadding ->
@@ -226,7 +258,8 @@ fun ClofApp(
                     darkMode = darkMode,
                     onDarkModeChange = onDarkModeChange,
                     onImport = onImport,
-                    isImporting = isImporting
+                    isImporting = isImporting,
+                    onManageCollections = { showCollectionsScreen = true }
                 )
             }
         ) { innerPadding ->
@@ -264,7 +297,8 @@ fun ClofApp(
                 darkMode = darkMode,
                 onDarkModeChange = onDarkModeChange,
                 onImport = onImport,
-                isImporting = isImporting
+                isImporting = isImporting,
+                onManageCollections = { showCollectionsScreen = true }
             )
         },
         floatingActionButton = {
@@ -299,7 +333,8 @@ fun ClofTopBar(
     darkMode: Boolean,
     onDarkModeChange: (Boolean) -> Unit,
     onImport: () -> Unit,
-    isImporting: Boolean
+    isImporting: Boolean,
+    onManageCollections: () -> Unit
 ) {
     TopAppBar(
         title = {
@@ -311,6 +346,9 @@ fun ClofTopBar(
                 enabled = !isImporting
             ) {
                 Text(if (isImporting) "Importing" else "Import")
+            }
+            Button(onClick = onManageCollections) {
+                Text("Collections")
             }
             Row(
                 modifier = Modifier.padding(end = 8.dp),

@@ -17,6 +17,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +43,7 @@ fun EditMovieScreen(
     var season by remember { mutableStateOf(movie.season.toString()) }
     var episode by remember { mutableStateOf(movie.episode.toString()) }
     var isSaving by remember { mutableStateOf(false) }
+    val collections by movieViewModel.collections.collectAsState()
 
     Column(
         modifier = Modifier
@@ -76,13 +78,10 @@ fun EditMovieScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        OutlinedTextField(
-            value = collection,
-            onValueChange = { collection = it },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Collection") },
-            singleLine = true,
-            enabled = !isSaving
+        CollectionPicker(
+            selectedCollection = collection,
+            collections = (collections + collection).distinct(),
+            onCollectionSelected = { collection = it }
         )
 
         Spacer(modifier = Modifier.height(16.dp))

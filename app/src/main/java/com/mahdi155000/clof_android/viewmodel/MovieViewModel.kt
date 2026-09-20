@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mahdi155000.clof_android.data.AppDatabase
 import com.mahdi155000.clof_android.data.ClofDatabaseImporter
+import com.mahdi155000.clof_android.data.CollectionRepository
 import com.mahdi155000.clof_android.data.ImportResult
 import com.mahdi155000.clof_android.data.MovieEntity
 import com.mahdi155000.clof_android.data.MovieRepository
@@ -22,7 +23,20 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         database.movieDao()
     )
 
-    private val databaseImporter = ClofDatabaseImporter(application, repository)
+    private val collectionRepository = CollectionRepository(database.collectionDao())
+
+    private val databaseImporter = ClofDatabaseImporter(
+        application,
+        repository,
+        collectionRepository
+    )
+
+    val collections: StateFlow<List<String>> =
+        collectionRepository.collections.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = listOf("main")
+        )
 
     val movies: StateFlow<List<MovieEntity>> =
         repository.allMovies.stateIn(
@@ -116,6 +130,28 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
                 databaseImporter.importFrom(uri)
             }.onSuccess(onComplete)
                 .onFailure(onError)
+        }
+    }
+
+    fun addCollection(name: String, onComplete: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            onComplete(collectionRepository.addCollection(name.trim()))
+        }
+    }
+
+    fun renameCollection(
+        oldName: String,
+        newName: String,
+        onComplete: (Boolean) -> Unit
+    ) {
+        viewModelScope.launch {
+            onComplete(collectionRepository.renameCollection(oldName, newName.trim()))
+        }
+    }
+
+    fun removeCollection(name: String, onComplete: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            onComplete(collectionRepository.removeCollection(name))
         }
     }
 
