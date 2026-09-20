@@ -157,7 +157,7 @@ fun ClofApp(
     BackHandler(
         enabled = showAddMovieScreen || movieBeingViewed != null ||
             movieBeingEdited != null || showCollectionsScreen ||
-            showMoveMoviesScreen || showGenresScreen
+            showMoveMoviesScreen || showGenresScreen || selectedCollection != null
     ) {
         when {
             showCollectionsScreen -> showCollectionsScreen = false
@@ -165,7 +165,8 @@ fun ClofApp(
             showGenresScreen -> showGenresScreen = false
             movieBeingViewed != null -> movieBeingViewed = null
             movieBeingEdited != null -> movieBeingEdited = null
-            else -> showAddMovieScreen = false
+            showAddMovieScreen -> showAddMovieScreen = false
+            selectedCollection != null -> selectedCollection = null
         }
     }
 
