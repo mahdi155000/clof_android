@@ -44,6 +44,7 @@ fun EditMovieScreen(
     var episode by remember { mutableStateOf(movie.episode.toString()) }
     var isSaving by remember { mutableStateOf(false) }
     val collections by movieViewModel.collections.collectAsState()
+    val genres by movieViewModel.genres.collectAsState()
 
     Column(
         modifier = Modifier
@@ -67,13 +68,10 @@ fun EditMovieScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        OutlinedTextField(
-            value = genre,
-            onValueChange = { genre = it },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Genre") },
-            singleLine = true,
-            enabled = !isSaving
+        GenrePicker(
+            selectedGenre = genre,
+            genres = (genres + genre).filter { it.isNotBlank() }.distinct(),
+            onGenreSelected = { genre = it }
         )
 
         Spacer(modifier = Modifier.height(12.dp))

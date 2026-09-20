@@ -104,6 +104,7 @@ fun ClofApp(
 
     var showCollectionsScreen by remember { mutableStateOf(false) }
     var showMoveMoviesScreen by remember { mutableStateOf(false) }
+    var showGenresScreen by remember { mutableStateOf(false) }
 
     var isImporting by remember { mutableStateOf(false) }
     var importMessage by remember { mutableStateOf<String?>(null) }
@@ -155,11 +156,13 @@ fun ClofApp(
 
     BackHandler(
         enabled = showAddMovieScreen || movieBeingViewed != null ||
-            movieBeingEdited != null || showCollectionsScreen || showMoveMoviesScreen
+            movieBeingEdited != null || showCollectionsScreen ||
+            showMoveMoviesScreen || showGenresScreen
     ) {
         when {
             showCollectionsScreen -> showCollectionsScreen = false
             showMoveMoviesScreen -> showMoveMoviesScreen = false
+            showGenresScreen -> showGenresScreen = false
             movieBeingViewed != null -> movieBeingViewed = null
             movieBeingEdited != null -> movieBeingEdited = null
             else -> showAddMovieScreen = false
@@ -188,6 +191,7 @@ fun ClofApp(
                         movieBeingEdited = null
                         showCollectionsScreen = false
                         showMoveMoviesScreen = false
+                        showGenresScreen = false
                         closeDrawer()
                     }
                 )
@@ -205,6 +209,7 @@ fun ClofApp(
                             movieBeingEdited = null
                             showCollectionsScreen = false
                             showMoveMoviesScreen = false
+                            showGenresScreen = false
                             closeDrawer()
                         }
                     )
@@ -219,6 +224,7 @@ fun ClofApp(
                         movieBeingEdited = null
                         showCollectionsScreen = true
                         showMoveMoviesScreen = false
+                        showGenresScreen = false
                         closeDrawer()
                     }
                 )
@@ -232,6 +238,21 @@ fun ClofApp(
                         movieBeingEdited = null
                         showMoveMoviesScreen = true
                         showCollectionsScreen = false
+                        showGenresScreen = false
+                        closeDrawer()
+                    }
+                )
+
+                NavigationDrawerItem(
+                    label = { Text("Manage genres") },
+                    selected = showGenresScreen,
+                    onClick = {
+                        showAddMovieScreen = false
+                        movieBeingViewed = null
+                        movieBeingEdited = null
+                        showGenresScreen = true
+                        showCollectionsScreen = false
+                        showMoveMoviesScreen = false
                         closeDrawer()
                     }
                 )
@@ -259,6 +280,33 @@ fun ClofApp(
                     CollectionsScreen(
                         movieViewModel = movieViewModel,
                         onBack = { showCollectionsScreen = false }
+                    )
+                }
+            }
+            return@ModalNavigationDrawer
+        }
+
+        if (showGenresScreen) {
+            Scaffold(
+                topBar = {
+                    ClofTopBar(
+                        darkMode = darkMode,
+                        onDarkModeChange = onDarkModeChange,
+                        onImport = onImport,
+                        isImporting = isImporting,
+                        onManageCollections = { showCollectionsScreen = true },
+                        onOpenDrawer = openDrawer
+                    )
+                }
+            ) { innerPadding ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                ) {
+                    GenresScreen(
+                        movieViewModel = movieViewModel,
+                        onBack = { showGenresScreen = false }
                     )
                 }
             }

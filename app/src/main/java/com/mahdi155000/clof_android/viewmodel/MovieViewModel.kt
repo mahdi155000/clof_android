@@ -9,6 +9,7 @@ import com.mahdi155000.clof_android.data.CollectionRepository
 import com.mahdi155000.clof_android.data.ImportResult
 import com.mahdi155000.clof_android.data.MovieEntity
 import com.mahdi155000.clof_android.data.MovieRepository
+import com.mahdi155000.clof_android.data.GenreRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -24,17 +25,20 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
     )
 
     private val collectionRepository = CollectionRepository(database.collectionDao())
+    private val genreRepository = GenreRepository(database.genreDao())
 
     init {
         viewModelScope.launch {
             collectionRepository.addMissingCollections(listOf("main", "watched"))
+            genreRepository.addMissingGenres(AppDatabase.defaultGenres)
         }
     }
 
     private val databaseImporter = ClofDatabaseImporter(
         application,
         repository,
-        collectionRepository
+        collectionRepository,
+        genreRepository
     )
 
     val collections: StateFlow<List<String>> =
@@ -49,6 +53,13 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptyList()
+        )
+
+    val genres: StateFlow<List<String>> =
+        genreRepository.genres.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = AppDatabase.defaultGenres
         )
 
     fun observeMovie(id: Int): Flow<MovieEntity?> {
@@ -166,6 +177,29 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             onComplete(collectionRepository.removeCollection(name))
         }
     }
+
+    fun addGenre(name: String, onComplete: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            onComplete(genreRepository.addGenre(name.trim()))
+        }
+    }
+
+    fun renameGenre(
+        oldName: String,
+        newName: String,
+        onComplete: (Boolean) -> Unit
+    ) {
+        viewModelScope.launch {
+            onComplete(genreRepository.renameGenre(oldName, newName.trim()))
+        }
+    }
+
+    fun removeGenre(name: String, onComplete: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            onComplete(genreRepository.removeGenre(name))
+        }
+    }
+
     fun updateMovie(
         movie: MovieEntity,
         onComplete: () -> Unit = {}

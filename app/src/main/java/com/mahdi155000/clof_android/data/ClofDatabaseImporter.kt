@@ -18,7 +18,8 @@ data class ImportResult(
 class ClofDatabaseImporter(
     private val context: Context,
     private val repository: MovieRepository,
-    private val collectionRepository: CollectionRepository
+    private val collectionRepository: CollectionRepository,
+    private val genreRepository: GenreRepository
 ) {
     suspend fun importFrom(uri: Uri): ImportResult = withContext(Dispatchers.IO) {
         val temporaryDatabase = File(
@@ -33,6 +34,7 @@ class ClofDatabaseImporter(
 
             val importedMovies = readMovies(temporaryDatabase)
             collectionRepository.addMissingCollections(importedMovies.map { it.collection }.toSet())
+            genreRepository.addMissingGenres(importedMovies.map { it.genre }.toSet())
             val inserted = repository.insertMissingMovies(importedMovies)
             ImportResult(
                 imported = inserted,
