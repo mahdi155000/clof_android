@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mahdi155000.clof_android.data.AppDatabase
+import com.mahdi155000.clof_android.data.ClofDatabaseImporter
+import com.mahdi155000.clof_android.data.ImportResult
 import com.mahdi155000.clof_android.data.MovieEntity
 import com.mahdi155000.clof_android.data.MovieRepository
 import kotlinx.coroutines.flow.Flow
@@ -19,6 +21,8 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = MovieRepository(
         database.movieDao()
     )
+
+    private val databaseImporter = ClofDatabaseImporter(application, repository)
 
     val movies: StateFlow<List<MovieEntity>> =
         repository.allMovies.stateIn(
@@ -99,6 +103,19 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
     fun previousSeason(movie: MovieEntity) {
         viewModelScope.launch {
             repository.previousSeason(movie.id)
+        }
+    }
+
+    fun importClofDatabase(
+        uri: android.net.Uri,
+        onComplete: (ImportResult) -> Unit,
+        onError: (Throwable) -> Unit
+    ) {
+        viewModelScope.launch {
+            runCatching {
+                databaseImporter.importFrom(uri)
+            }.onSuccess(onComplete)
+                .onFailure(onError)
         }
     }
 

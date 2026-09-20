@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
@@ -22,8 +23,23 @@ interface MovieDao {
     @Query("SELECT * FROM movies WHERE id = :id")
     suspend fun getMovie(id: Int): MovieEntity?
 
+    @Query("SELECT * FROM movies WHERE title = :title LIMIT 1")
+    suspend fun getMovieByTitle(title: String): MovieEntity?
+
     @Insert
     suspend fun insertMovie(movie: MovieEntity)
+
+    @Transaction
+    suspend fun insertMissingMovies(movies: List<MovieEntity>): Int {
+        var insertedCount = 0
+        movies.forEach { movie ->
+            if (getMovieByTitle(movie.title) == null) {
+                insertMovie(movie)
+                insertedCount++
+            }
+        }
+        return insertedCount
+    }
 
     @Update
     suspend fun updateMovie(movie: MovieEntity)

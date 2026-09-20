@@ -21,6 +21,10 @@ class MovieRepository(
         movieDao.insertMovie(movie)
     }
 
+    suspend fun insertMissingMovies(movies: List<MovieEntity>): Int {
+        return movieDao.insertMissingMovies(movies)
+    }
+
     suspend fun updateMovie(movie: MovieEntity) {
         movieDao.updateMovie(movie)
     }

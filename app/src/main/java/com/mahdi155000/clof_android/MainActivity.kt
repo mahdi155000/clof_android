@@ -3,8 +3,10 @@ package com.mahdi155000.clof_android
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,6 +21,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
@@ -90,6 +93,47 @@ fun ClofApp(
         mutableStateOf<MovieEntity?>(null)
     }
 
+    var isImporting by remember { mutableStateOf(false) }
+    var importMessage by remember { mutableStateOf<String?>(null) }
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            isImporting = true
+            movieViewModel.importClofDatabase(
+                uri = uri,
+                onComplete = { result ->
+                    isImporting = false
+                    importMessage = "Imported ${result.imported} items. " +
+                        "Skipped ${result.skipped} duplicate items."
+                },
+                onError = { error ->
+                    isImporting = false
+                    importMessage = "Import failed: ${error.message ?: "invalid Clof database"}"
+                }
+            )
+        }
+    }
+
+    val onImport = {
+        if (!isImporting) {
+            importLauncher.launch(arrayOf("*/*"))
+        }
+    }
+
+    importMessage?.let { message ->
+        AlertDialog(
+            onDismissRequest = { importMessage = null },
+            confirmButton = {
+                Button(onClick = { importMessage = null }) {
+                    Text("OK")
+                }
+            },
+            title = { Text("Clof import") },
+            text = { Text(message) }
+        )
+    }
+
     BackHandler(
         enabled = showAddMovieScreen || movieBeingViewed != null || movieBeingEdited != null
     ) {
@@ -107,7 +151,9 @@ fun ClofApp(
             topBar = {
                 ClofTopBar(
                     darkMode = darkMode,
-                    onDarkModeChange = onDarkModeChange
+                    onDarkModeChange = onDarkModeChange,
+                    onImport = onImport,
+                    isImporting = isImporting
                 )
             }
         ) { innerPadding ->
@@ -140,7 +186,9 @@ fun ClofApp(
             topBar = {
                 ClofTopBar(
                     darkMode = darkMode,
-                    onDarkModeChange = onDarkModeChange
+                    onDarkModeChange = onDarkModeChange,
+                    onImport = onImport,
+                    isImporting = isImporting
                 )
             }
         ) { innerPadding ->
@@ -176,7 +224,9 @@ fun ClofApp(
             topBar = {
                 ClofTopBar(
                     darkMode = darkMode,
-                    onDarkModeChange = onDarkModeChange
+                    onDarkModeChange = onDarkModeChange,
+                    onImport = onImport,
+                    isImporting = isImporting
                 )
             }
         ) { innerPadding ->
@@ -212,7 +262,9 @@ fun ClofApp(
         topBar = {
             ClofTopBar(
                 darkMode = darkMode,
-                onDarkModeChange = onDarkModeChange
+                onDarkModeChange = onDarkModeChange,
+                onImport = onImport,
+                isImporting = isImporting
             )
         },
         floatingActionButton = {
@@ -245,13 +297,21 @@ fun ClofApp(
 @Composable
 fun ClofTopBar(
     darkMode: Boolean,
-    onDarkModeChange: (Boolean) -> Unit
+    onDarkModeChange: (Boolean) -> Unit,
+    onImport: () -> Unit,
+    isImporting: Boolean
 ) {
     TopAppBar(
         title = {
             Text("CLOF")
         },
         actions = {
+            Button(
+                onClick = onImport,
+                enabled = !isImporting
+            ) {
+                Text(if (isImporting) "Importing" else "Import")
+            }
             Row(
                 modifier = Modifier.padding(end = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
