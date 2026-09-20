@@ -26,7 +26,9 @@ import com.mahdi155000.clof_android.viewmodel.MovieViewModel
 @Composable
 fun CollectionsScreen(
     movieViewModel: MovieViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onCollectionRenamed: (oldName: String, newName: String) -> Unit = { _, _ -> },
+    onCollectionRemoved: (name: String) -> Unit = {}
 ) {
     val collections by movieViewModel.collections.collectAsState()
     var newCollectionName by remember { mutableStateOf("") }
@@ -105,6 +107,7 @@ fun CollectionsScreen(
                                     movieViewModel.renameCollection(collection, name) { renamed ->
                                         message = if (renamed) {
                                             editingCollection = null
+                                            onCollectionRenamed(collection, name)
                                             "Collection renamed."
                                         } else {
                                             "Use a new collection name."
@@ -140,6 +143,7 @@ fun CollectionsScreen(
                                 onClick = {
                                     movieViewModel.removeCollection(collection) { removed ->
                                         message = if (removed) {
+                                            onCollectionRemoved(collection)
                                             "Collection removed; its movies moved to main."
                                         } else {
                                             "The main collection cannot be removed."

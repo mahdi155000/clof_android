@@ -21,5 +21,7 @@ data class MovieEntity(
 
     val watched: Boolean = false,
 
-    val collection: String = "main"
+    val collection: String = "main",
+
+    val inTrash: Boolean = false
 )

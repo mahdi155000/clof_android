@@ -40,6 +40,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -105,6 +106,8 @@ fun ClofApp(
     var showCollectionsScreen by remember { mutableStateOf(false) }
     var showMoveMoviesScreen by remember { mutableStateOf(false) }
     var showGenresScreen by remember { mutableStateOf(false) }
+    var showTrashScreen by remember { mutableStateOf(false) }
+    var movieToDelete by remember { mutableStateOf<MovieEntity?>(null) }
 
     var isImporting by remember { mutableStateOf(false) }
     var importMessage by remember { mutableStateOf<String?>(null) }
@@ -157,12 +160,14 @@ fun ClofApp(
     BackHandler(
         enabled = showAddMovieScreen || movieBeingViewed != null ||
             movieBeingEdited != null || showCollectionsScreen ||
-            showMoveMoviesScreen || showGenresScreen || selectedCollection != null
+            showMoveMoviesScreen || showGenresScreen || showTrashScreen ||
+            selectedCollection != null
     ) {
         when {
             showCollectionsScreen -> showCollectionsScreen = false
             showMoveMoviesScreen -> showMoveMoviesScreen = false
             showGenresScreen -> showGenresScreen = false
+            showTrashScreen -> showTrashScreen = false
             movieBeingViewed != null -> movieBeingViewed = null
             movieBeingEdited != null -> movieBeingEdited = null
             showAddMovieScreen -> showAddMovieScreen = false
@@ -257,6 +262,22 @@ fun ClofApp(
                         closeDrawer()
                     }
                 )
+
+                NavigationDrawerItem(
+                    label = { Text("Trash") },
+                    selected = showTrashScreen,
+                    onClick = {
+                        showAddMovieScreen = false
+                        movieBeingViewed = null
+                        movieBeingEdited = null
+                        selectedCollection = null
+                        showTrashScreen = true
+                        showGenresScreen = false
+                        showCollectionsScreen = false
+                        showMoveMoviesScreen = false
+                        closeDrawer()
+                    }
+                )
             }
         }
     ) {
@@ -280,7 +301,17 @@ fun ClofApp(
                 ) {
                     CollectionsScreen(
                         movieViewModel = movieViewModel,
-                        onBack = { showCollectionsScreen = false }
+                        onBack = { showCollectionsScreen = false },
+                        onCollectionRenamed = { oldName, newName ->
+                            if (selectedCollection == oldName) {
+                                selectedCollection = newName
+                            }
+                        },
+                        onCollectionRemoved = { removedName ->
+                            if (selectedCollection == removedName) {
+                                selectedCollection = null
+                            }
+                        }
                     )
                 }
             }
@@ -308,6 +339,33 @@ fun ClofApp(
                     GenresScreen(
                         movieViewModel = movieViewModel,
                         onBack = { showGenresScreen = false }
+                    )
+                }
+            }
+            return@ModalNavigationDrawer
+        }
+
+        if (showTrashScreen) {
+            Scaffold(
+                topBar = {
+                    ClofTopBar(
+                        darkMode = darkMode,
+                        onDarkModeChange = onDarkModeChange,
+                        onImport = onImport,
+                        isImporting = isImporting,
+                        onManageCollections = { showCollectionsScreen = true },
+                        onOpenDrawer = openDrawer
+                    )
+                }
+            ) { innerPadding ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                ) {
+                    TrashScreen(
+                        movieViewModel = movieViewModel,
+                        onBack = { showTrashScreen = false }
                     )
                 }
             }
@@ -461,6 +519,29 @@ fun ClofApp(
 
         val movies by movieViewModel.movies.collectAsState()
 
+        movieToDelete?.let { movie ->
+            AlertDialog(
+                onDismissRequest = { movieToDelete = null },
+                title = { Text("Move to trash?") },
+                text = { Text("\"${movie.title}\" can be restored from Trash.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            movieViewModel.deleteMovie(movie)
+                            movieToDelete = null
+                        }
+                    ) {
+                        Text("Move to Trash")
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = { movieToDelete = null }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
         Scaffold(
             topBar = {
                 ClofTopBar(
@@ -491,6 +572,7 @@ fun ClofApp(
                 onEdit = { movie ->
                     movieBeingEdited = movie
                 },
+                onDelete = { movieToDelete = it },
                 selectedCollection = selectedCollection,
                 modifier = Modifier
                     .fillMaxSize()
@@ -549,6 +631,7 @@ fun MovieList(
     movieViewModel: MovieViewModel,
     onMovieClick: (MovieEntity) -> Unit,
     onEdit: (MovieEntity) -> Unit,
+    onDelete: (MovieEntity) -> Unit,
     selectedCollection: String? = null,
     modifier: Modifier = Modifier
 ) {
@@ -581,6 +664,16 @@ fun MovieList(
         .filter { it.isNotBlank() }
         .distinct()
         .sorted()
+
+    LaunchedEffect(selectedCollection) {
+        collectionFilter = "All"
+    }
+
+    LaunchedEffect(collections) {
+        if (collectionFilter != "All" && collectionFilter !in collections) {
+            collectionFilter = "All"
+        }
+    }
 
     val filteredMovies = movies
         .filter { movie ->
@@ -879,7 +972,8 @@ fun MovieList(
                         movie = movie,
                         movieViewModel = movieViewModel,
                         onMovieClick = onMovieClick,
-                        onEdit = onEdit
+                        onEdit = onEdit,
+                        onDelete = onDelete
                     )
 
                     Spacer(
@@ -915,6 +1009,7 @@ fun MovieItem(
     movieViewModel: MovieViewModel,
     onMovieClick: (MovieEntity) -> Unit,
     onEdit: (MovieEntity) -> Unit,
+    onDelete: (MovieEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -1035,10 +1130,10 @@ fun MovieItem(
 
                 Button(
                     onClick = {
-                        movieViewModel.deleteMovie(movie)
+                        onDelete(movie)
                     }
                 ) {
-                    Text("Delete")
+                    Text("Move to Trash")
                 }
             }
         }

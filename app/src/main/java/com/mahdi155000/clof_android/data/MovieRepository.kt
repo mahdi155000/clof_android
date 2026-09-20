@@ -8,6 +8,8 @@ class MovieRepository(
 
     val allMovies: Flow<List<MovieEntity>> =
         movieDao.getAllMovies()
+    val trashMovies: Flow<List<MovieEntity>> =
+        movieDao.getTrashMovies()
 
     fun observeMovie(id: Int): Flow<MovieEntity?> {
         return movieDao.observeMovie(id)
@@ -30,7 +32,19 @@ class MovieRepository(
     }
 
     suspend fun deleteMovie(movie: MovieEntity) {
-        movieDao.deleteMovie(movie)
+        movieDao.moveToTrash(movie.id)
+    }
+
+    suspend fun restoreMovie(movie: MovieEntity) {
+        movieDao.restoreMovie(movie.id)
+    }
+
+    suspend fun permanentlyDeleteMovie(movie: MovieEntity) {
+        movieDao.permanentlyDeleteMovie(movie)
+    }
+
+    suspend fun emptyTrash() {
+        movieDao.emptyTrash()
     }
 
     suspend fun setWatched(

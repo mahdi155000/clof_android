@@ -55,6 +55,13 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             initialValue = emptyList()
         )
 
+    val trashMovies: StateFlow<List<MovieEntity>> =
+        repository.trashMovies.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyList()
+        )
+
     val genres: StateFlow<List<String>> =
         genreRepository.genres.stateIn(
             scope = viewModelScope,
@@ -98,6 +105,24 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             repository.deleteMovie(movie)
             onComplete()
+        }
+    }
+
+    fun restoreMovie(movie: MovieEntity) {
+        viewModelScope.launch {
+            repository.restoreMovie(movie)
+        }
+    }
+
+    fun permanentlyDeleteMovie(movie: MovieEntity) {
+        viewModelScope.launch {
+            repository.permanentlyDeleteMovie(movie)
+        }
+    }
+
+    fun emptyTrash() {
+        viewModelScope.launch {
+            repository.emptyTrash()
         }
     }
 

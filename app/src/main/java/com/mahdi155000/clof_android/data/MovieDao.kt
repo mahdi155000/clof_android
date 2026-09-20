@@ -11,8 +11,11 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface MovieDao {
 
-    @Query("SELECT * FROM movies ORDER BY id")
+    @Query("SELECT * FROM movies WHERE inTrash = 0 ORDER BY id")
     fun getAllMovies(): Flow<List<MovieEntity>>
+
+    @Query("SELECT * FROM movies WHERE inTrash = 1 ORDER BY id DESC")
+    fun getTrashMovies(): Flow<List<MovieEntity>>
 
     @Query("SELECT * FROM movies WHERE collection = :collection ORDER BY id")
     fun getMoviesByCollection(collection: String): Flow<List<MovieEntity>>
@@ -46,6 +49,18 @@ interface MovieDao {
 
     @Delete
     suspend fun deleteMovie(movie: MovieEntity)
+
+    @Query("UPDATE movies SET inTrash = 1 WHERE id = :id")
+    suspend fun moveToTrash(id: Int)
+
+    @Query("UPDATE movies SET inTrash = 0 WHERE id = :id")
+    suspend fun restoreMovie(id: Int)
+
+    @Delete
+    suspend fun permanentlyDeleteMovie(movie: MovieEntity)
+
+    @Query("DELETE FROM movies WHERE inTrash = 1")
+    suspend fun emptyTrash()
 
     @Query("UPDATE movies SET watched = :watched WHERE id = :id")
     suspend fun setWatched(id: Int, watched: Boolean)
