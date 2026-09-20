@@ -90,6 +90,18 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun nextSeason(movie: MovieEntity) {
+        viewModelScope.launch {
+            repository.nextSeason(movie.id)
+        }
+    }
+
+    fun previousSeason(movie: MovieEntity) {
+        viewModelScope.launch {
+            repository.previousSeason(movie.id)
+        }
+    }
+
     fun updateMovie(
         movie: MovieEntity,
         onComplete: () -> Unit = {}

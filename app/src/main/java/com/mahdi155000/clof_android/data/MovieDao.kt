@@ -44,10 +44,27 @@ interface MovieDao {
     @Query("""
         UPDATE movies
         SET episode = CASE
-            WHEN episode > 0 THEN episode - 1
-            ELSE 0
+            WHEN episode > 1 THEN episode - 1
+            ELSE 1
         END
         WHERE id = :id AND isSeries = 1
     """)
     suspend fun previousEpisode(id: Int)
+
+    @Query("""
+        UPDATE movies
+        SET season = season + 1
+        WHERE id = :id AND isSeries = 1
+    """)
+    suspend fun nextSeason(id: Int)
+
+    @Query("""
+        UPDATE movies
+        SET season = CASE
+            WHEN season > 1 THEN season - 1
+            ELSE 1
+        END
+        WHERE id = :id AND isSeries = 1
+    """)
+    suspend fun previousSeason(id: Int)
 }

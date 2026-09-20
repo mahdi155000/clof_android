@@ -692,14 +692,16 @@ fun MovieItem(
                 modifier = Modifier.height(8.dp)
             )
 
-            Text(
-                text = if (movie.watched) {
-                    "Watched"
-                } else {
-                    "Not watched"
-                },
-                style = MaterialTheme.typography.bodyMedium
-            )
+            if (!movie.isSeries) {
+                Text(
+                    text = if (movie.watched) {
+                        "Watched"
+                    } else {
+                        "Not watched"
+                    },
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
 
             Spacer(
                 modifier = Modifier.height(16.dp)
@@ -711,14 +713,20 @@ fun MovieItem(
             ) {
                 Button(
                     onClick = {
-                        movieViewModel.setWatched(
-                            movie,
-                            !movie.watched
-                        )
+                        if (movie.isSeries) {
+                            movieViewModel.nextEpisode(movie)
+                        } else {
+                            movieViewModel.setWatched(
+                                movie,
+                                !movie.watched
+                            )
+                        }
                     }
                 ) {
                     Text(
-                        if (movie.watched) {
+                        if (movie.isSeries) {
+                            "Next Episode"
+                        } else if (movie.watched) {
                             "Unwatch"
                         } else {
                             "Watched"

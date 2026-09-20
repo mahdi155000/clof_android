@@ -46,4 +46,12 @@ class MovieRepository(
     suspend fun previousEpisode(id: Int) {
         movieDao.previousEpisode(id)
     }
+
+    suspend fun nextSeason(id: Int) {
+        movieDao.nextSeason(id)
+    }
+
+    suspend fun previousSeason(id: Int) {
+        movieDao.previousSeason(id)
+    }
 }
