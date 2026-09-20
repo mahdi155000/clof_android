@@ -188,6 +188,19 @@ fun MovieDetailsScreen(
                     }
                 )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (currentMovie.watched && currentMovie.collection != "watched") {
+                Button(
+                    onClick = {
+                        movieViewModel.moveMovie(currentMovie, "watched")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Move to Watched collection")
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))

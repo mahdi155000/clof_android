@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [MovieEntity::class, CollectionEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -29,18 +29,25 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "clof.db"
-                ).addMigrations(MIGRATION_1_2)
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .addCallback(object : Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
-                            db.execSQL("INSERT OR IGNORE INTO collections(name) VALUES ('main')")
+                            insertDefaultCollections(db)
+                        }
+
+                        override fun onOpen(db: SupportSQLiteDatabase) {
+                            insertDefaultCollections(db)
                         }
                     })
                     .build()
-
                 INSTANCE = instance
-
                 instance
             }
+        }
+
+        private fun insertDefaultCollections(db: SupportSQLiteDatabase) {
+            db.execSQL("INSERT OR IGNORE INTO collections(name) VALUES ('main')")
+            db.execSQL("INSERT OR IGNORE INTO collections(name) VALUES ('watched')")
         }
 
         private val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -55,6 +62,13 @@ abstract class AppDatabase : RoomDatabase() {
                         "SELECT DISTINCT CASE WHEN TRIM(collection) = '' THEN 'main' " +
                         "ELSE collection END FROM movies"
                 )
+            }
+        }
+
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("INSERT OR IGNORE INTO collections(name) VALUES ('main')")
+                db.execSQL("INSERT OR IGNORE INTO collections(name) VALUES ('watched')")
             }
         }
     }

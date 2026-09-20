@@ -43,6 +43,10 @@ class MovieRepository(
         )
     }
 
+    suspend fun moveMovie(id: Int, collection: String) {
+        movieDao.moveMovie(id, collection)
+    }
+
     suspend fun nextEpisode(id: Int) {
         movieDao.nextEpisode(id)
     }

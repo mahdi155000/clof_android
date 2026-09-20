@@ -50,6 +50,9 @@ interface MovieDao {
     @Query("UPDATE movies SET watched = :watched WHERE id = :id")
     suspend fun setWatched(id: Int, watched: Boolean)
 
+    @Query("UPDATE movies SET collection = :collection WHERE id = :id")
+    suspend fun moveMovie(id: Int, collection: String)
+
     @Query("""
         UPDATE movies
         SET episode = episode + 1

@@ -25,6 +25,12 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
 
     private val collectionRepository = CollectionRepository(database.collectionDao())
 
+    init {
+        viewModelScope.launch {
+            collectionRepository.addMissingCollections(listOf("main", "watched"))
+        }
+    }
+
     private val databaseImporter = ClofDatabaseImporter(
         application,
         repository,
@@ -35,7 +41,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         collectionRepository.collections.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = listOf("main")
+            initialValue = listOf("main", "watched")
         )
 
     val movies: StateFlow<List<MovieEntity>> =
@@ -108,6 +114,12 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun moveMovie(movie: MovieEntity, collection: String) {
+        viewModelScope.launch {
+            repository.moveMovie(movie.id, collection)
+        }
+    }
+
     fun nextSeason(movie: MovieEntity) {
         viewModelScope.launch {
             repository.nextSeason(movie.id)
@@ -154,7 +166,6 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             onComplete(collectionRepository.removeCollection(name))
         }
     }
-
     fun updateMovie(
         movie: MovieEntity,
         onComplete: () -> Unit = {}
