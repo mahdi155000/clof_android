@@ -7,7 +7,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
@@ -23,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mahdi155000.clof_android.data.MovieEntity
+import com.mahdi155000.clof_android.data.withEdits
 import com.mahdi155000.clof_android.viewmodel.MovieViewModel
 
 @Composable
@@ -42,6 +46,8 @@ fun EditMovieScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .imePadding()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
         Text("Edit Movie")
@@ -135,21 +141,13 @@ fun EditMovieScreen(
 
                 isSaving = true
 
-                val updatedMovie = movie.copy(
-                    title = title.trim(),
-                    genre = genre.trim(),
-                    collection = collection.trim().ifBlank { "main" },
+                val updatedMovie = movie.withEdits(
+                    title = title,
+                    genre = genre,
+                    collection = collection,
                     isSeries = isSeries,
-                    season = if (isSeries) {
-                        season.toIntOrNull() ?: 1
-                    } else {
-                        0
-                    },
-                    episode = if (isSeries) {
-                        episode.toIntOrNull() ?: 1
-                    } else {
-                        0
-                    }
+                    season = season,
+                    episode = episode
                 )
 
                 movieViewModel.updateMovie(updatedMovie) {

@@ -15,6 +15,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.mahdi155000.clof_android.data.MovieEntity
 import com.mahdi155000.clof_android.viewmodel.MovieViewModel
 
 @Composable
@@ -22,7 +23,7 @@ fun MovieDetailsScreen(
     movieId: Int,
     movieViewModel: MovieViewModel,
     onBack: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: (MovieEntity) -> Unit
 ) {
     val movie by movieViewModel
         .observeMovie(movieId)
@@ -169,7 +170,7 @@ fun MovieDetailsScreen(
         )
 
         Button(
-            onClick = onEdit,
+            onClick = { onEdit(currentMovie) },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Edit Movie")

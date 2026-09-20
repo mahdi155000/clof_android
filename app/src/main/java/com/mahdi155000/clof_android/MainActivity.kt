@@ -2,6 +2,7 @@ package com.mahdi155000.clof_android
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -88,6 +90,16 @@ fun ClofApp(
         mutableStateOf<MovieEntity?>(null)
     }
 
+    BackHandler(
+        enabled = showAddMovieScreen || movieBeingViewed != null || movieBeingEdited != null
+    ) {
+        when {
+            movieBeingViewed != null -> movieBeingViewed = null
+            movieBeingEdited != null -> movieBeingEdited = null
+            else -> showAddMovieScreen = false
+        }
+    }
+
     if (movieBeingViewed != null) {
         val movie = movieBeingViewed!!
 
@@ -110,8 +122,8 @@ fun ClofApp(
                     onBack = {
                         movieBeingViewed = null
                     },
-                    onEdit = {
-                        movieBeingEdited = movie
+                    onEdit = { currentMovie ->
+                        movieBeingEdited = currentMovie
                         movieBeingViewed = null
                     }
                 )
@@ -463,20 +475,25 @@ fun MovieList(
                 )
             )
 
-            Row(
+            LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilterButton(
-                    text = "All",
-                    selected = collectionFilter == "All"
-                ) {
-                    collectionFilter = "All"
+                item {
+                    FilterButton(
+                        text = "All",
+                        selected = collectionFilter == "All"
+                    ) {
+                        collectionFilter = "All"
+                    }
                 }
 
-                collections.forEach { collection ->
+                items(
+                    items = collections,
+                    key = { collection -> collection }
+                ) { collection ->
                     FilterButton(
                         text = collection,
                         selected = collectionFilter == collection
