@@ -12,14 +12,20 @@ import androidx.compose.runtime.setValue
 
 @Composable
 fun GenrePicker(
-    selectedGenre: String,
+    selectedGenres: List<String>,
     genres: List<String>,
-    onGenreSelected: (String) -> Unit
+    onGenresChanged: (List<String>) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     Button(onClick = { expanded = true }) {
-        Text(if (selectedGenre.isBlank()) "Genre: None" else "Genre: $selectedGenre")
+        Text(
+            if (selectedGenres.isEmpty()) {
+                "Genres: None"
+            } else {
+                "Genres: ${selectedGenres.joinToString(", ")}"
+            }
+        )
     }
 
     DropdownMenu(
@@ -29,16 +35,23 @@ fun GenrePicker(
         DropdownMenuItem(
             text = { Text("None") },
             onClick = {
-                onGenreSelected("")
+                onGenresChanged(emptyList())
                 expanded = false
             }
         )
         genres.forEach { genre ->
             DropdownMenuItem(
-                text = { Text(genre) },
+                text = {
+                    Text(if (genre in selectedGenres) "✓ $genre" else genre)
+                },
                 onClick = {
-                    onGenreSelected(genre)
-                    expanded = false
+                    onGenresChanged(
+                        if (genre in selectedGenres) {
+                            selectedGenres - genre
+                        } else {
+                            selectedGenres + genre
+                        }
+                    )
                 }
             )
         }

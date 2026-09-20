@@ -34,7 +34,7 @@ fun AddMovieScreen(
     onMovieAdded: () -> Unit
 ) {
     var title by remember { mutableStateOf("") }
-    var genre by remember { mutableStateOf("") }
+    var genresForMovie by remember { mutableStateOf<List<String>>(emptyList()) }
     var collection by remember { mutableStateOf("main") }
     var isSeries by remember { mutableStateOf(false) }
     var season by remember { mutableStateOf("1") }
@@ -67,9 +67,9 @@ fun AddMovieScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         GenrePicker(
-            selectedGenre = genre,
+            selectedGenres = genresForMovie,
             genres = genres,
-            onGenreSelected = { genre = it }
+            onGenresChanged = { genresForMovie = it }
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -138,7 +138,7 @@ fun AddMovieScreen(
 
                 movieViewModel.addMovie(
                     title = title.trim(),
-                    genre = genre.trim(),
+                    genre = genresForMovie.joinToString(", "),
                     collection = collection.trim().ifBlank { "main" },
                     isSeries = isSeries,
                     season = if (isSeries) {

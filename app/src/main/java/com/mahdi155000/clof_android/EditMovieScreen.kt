@@ -37,7 +37,9 @@ fun EditMovieScreen(
     onMovieUpdated: () -> Unit
 ) {
     var title by remember { mutableStateOf(movie.title) }
-    var genre by remember { mutableStateOf(movie.genre) }
+    var genresForMovie by remember {
+        mutableStateOf(movie.genre.split(",").map { it.trim() }.filter { it.isNotBlank() })
+    }
     var collection by remember { mutableStateOf(movie.collection) }
     var isSeries by remember { mutableStateOf(movie.isSeries) }
     var season by remember { mutableStateOf(movie.season.toString()) }
@@ -69,9 +71,9 @@ fun EditMovieScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         GenrePicker(
-            selectedGenre = genre,
-            genres = (genres + genre).filter { it.isNotBlank() }.distinct(),
-            onGenreSelected = { genre = it }
+            selectedGenres = genresForMovie,
+            genres = (genres + genresForMovie).filter { it.isNotBlank() }.distinct(),
+            onGenresChanged = { genresForMovie = it }
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -140,7 +142,7 @@ fun EditMovieScreen(
 
                 val updatedMovie = movie.withEdits(
                     title = title,
-                    genre = genre,
+                    genre = genresForMovie.joinToString(", "),
                     collection = collection,
                     isSeries = isSeries,
                     season = season,

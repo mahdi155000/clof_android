@@ -34,7 +34,12 @@ class ClofDatabaseImporter(
 
             val importedMovies = readMovies(temporaryDatabase)
             collectionRepository.addMissingCollections(importedMovies.map { it.collection }.toSet())
-            genreRepository.addMissingGenres(importedMovies.map { it.genre }.toSet())
+            genreRepository.addMissingGenres(
+                importedMovies
+                    .flatMap { it.genre.split(",") }
+                    .map { it.trim() }
+                    .toSet()
+            )
             val inserted = repository.insertMissingMovies(importedMovies)
             ImportResult(
                 imported = inserted,
