@@ -54,8 +54,12 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         private fun insertDefaultCollections(db: SupportSQLiteDatabase) {
-            db.execSQL("INSERT OR IGNORE INTO collections(name) VALUES ('main')")
-            db.execSQL("INSERT OR IGNORE INTO collections(name) VALUES ('watched')")
+            db.execSQL(
+                "INSERT OR IGNORE INTO collections(name) VALUES ('${CollectionNames.MAIN}')"
+            )
+            db.execSQL(
+                "INSERT OR IGNORE INTO collections(name) VALUES ('${CollectionNames.WATCHED}')"
+            )
         }
 
         private fun insertDefaultGenres(db: SupportSQLiteDatabase) {
@@ -96,10 +100,13 @@ abstract class AppDatabase : RoomDatabase() {
                     "CREATE TABLE IF NOT EXISTS collections " +
                         "(name TEXT NOT NULL, PRIMARY KEY(name))"
                 )
-                db.execSQL("INSERT OR IGNORE INTO collections(name) VALUES ('main')")
+                db.execSQL(
+                    "INSERT OR IGNORE INTO collections(name) VALUES ('${CollectionNames.MAIN}')"
+                )
                 db.execSQL(
                     "INSERT OR IGNORE INTO collections(name) " +
-                        "SELECT DISTINCT CASE WHEN TRIM(collection) = '' THEN 'main' " +
+                        "SELECT DISTINCT CASE WHEN TRIM(collection) = '' " +
+                        "THEN '${CollectionNames.MAIN}' " +
                         "ELSE collection END FROM movies"
                 )
             }
@@ -107,8 +114,12 @@ abstract class AppDatabase : RoomDatabase() {
 
         private val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("INSERT OR IGNORE INTO collections(name) VALUES ('main')")
-                db.execSQL("INSERT OR IGNORE INTO collections(name) VALUES ('watched')")
+                db.execSQL(
+                    "INSERT OR IGNORE INTO collections(name) VALUES ('${CollectionNames.MAIN}')"
+                )
+                db.execSQL(
+                    "INSERT OR IGNORE INTO collections(name) VALUES ('${CollectionNames.WATCHED}')"
+                )
             }
         }
 

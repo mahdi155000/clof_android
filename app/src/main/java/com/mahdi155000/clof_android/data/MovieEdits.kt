@@ -11,7 +11,7 @@ fun MovieEntity.withEdits(
 ): MovieEntity = copy(
     title = title.trim(),
     genre = genre.trim(),
-    collection = collection.trim().ifBlank { "main" },
+    collection = collection.trim().ifBlank { CollectionNames.MAIN },
     isSeries = isSeries,
     season = if (isSeries) season.toIntOrNull() ?: 1 else 0,
     episode = if (isSeries) episode.toIntOrNull() ?: 1 else 0

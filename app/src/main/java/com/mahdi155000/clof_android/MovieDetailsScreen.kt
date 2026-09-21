@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.mahdi155000.clof_android.data.CollectionNames
 import com.mahdi155000.clof_android.data.MovieEntity
 import com.mahdi155000.clof_android.viewmodel.MovieViewModel
 
@@ -196,10 +197,12 @@ fun MovieDetailsScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            if (currentMovie.watched && currentMovie.collection != "watched") {
+            if (currentMovie.watched &&
+                currentMovie.collection != CollectionNames.WATCHED
+            ) {
                 Button(
                     onClick = {
-                        movieViewModel.moveMovie(currentMovie, "watched")
+                        movieViewModel.moveMovie(currentMovie, CollectionNames.WATCHED)
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {

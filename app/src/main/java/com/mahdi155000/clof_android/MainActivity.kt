@@ -51,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mahdi155000.clof_android.data.CollectionNames
 import com.mahdi155000.clof_android.data.MovieEntity
 import com.mahdi155000.clof_android.viewmodel.MovieViewModel
 import kotlinx.coroutines.launch
@@ -138,7 +139,9 @@ fun ClofApp(
     val openDrawer: () -> Unit = { drawerScope.launch { drawerState.open() } }
     val closeDrawer: () -> Unit = { drawerScope.launch { drawerState.close() } }
     val collections by movieViewModel.collections.collectAsState()
-    var selectedCollection by remember { mutableStateOf<String?>("main") }
+    var selectedCollection by remember {
+        mutableStateOf<String?>(CollectionNames.MAIN)
+    }
     var collectionsExpanded by remember { mutableStateOf(true) }
 
     val onImport = {
@@ -1140,10 +1143,12 @@ fun MovieItem(
                     )
                 }
 
-                if (movie.watched && movie.collection != "watched") {
+                if (movie.watched &&
+                    movie.collection != CollectionNames.WATCHED
+                ) {
                     Button(
                         onClick = {
-                            movieViewModel.moveMovie(movie, "watched")
+                            movieViewModel.moveMovie(movie, CollectionNames.WATCHED)
                         }
                     ) {
                         Text("To Watched")

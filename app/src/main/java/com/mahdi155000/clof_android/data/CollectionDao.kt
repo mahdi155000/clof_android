@@ -27,7 +27,12 @@ interface CollectionDao {
 
     @Transaction
     suspend fun renameCollection(oldName: String, newName: String): Boolean {
-        if (oldName == "main" || oldName == newName) return false
+        if (CollectionNames.isReserved(oldName) ||
+            CollectionNames.isReserved(newName) ||
+            oldName == newName
+        ) {
+            return false
+        }
         if (insertCollection(CollectionEntity(newName)) == -1L) return false
 
         moveMoviesToCollection(oldName, newName)
@@ -37,9 +42,9 @@ interface CollectionDao {
 
     @Transaction
     suspend fun removeCollection(name: String): Boolean {
-        if (name == "main") return false
+        if (CollectionNames.isReserved(name)) return false
 
-        moveMoviesToCollection(name, "main")
+        moveMoviesToCollection(name, CollectionNames.MAIN)
         deleteCollectionRow(name)
         return true
     }

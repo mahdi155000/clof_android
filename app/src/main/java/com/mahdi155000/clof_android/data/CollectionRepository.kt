@@ -8,6 +8,7 @@ class CollectionRepository(
     val collections: Flow<List<String>> = collectionDao.observeCollections()
 
     suspend fun addCollection(name: String): Boolean {
+        if (CollectionNames.isReserved(name)) return false
         return collectionDao.insertCollection(CollectionEntity(name)) != -1L
     }
 

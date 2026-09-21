@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.mahdi155000.clof_android.data.AppDatabase
 import com.mahdi155000.clof_android.data.ClofDatabaseImporter
 import com.mahdi155000.clof_android.data.CollectionRepository
+import com.mahdi155000.clof_android.data.CollectionNames
 import com.mahdi155000.clof_android.data.ImportResult
 import com.mahdi155000.clof_android.data.MovieEntity
 import com.mahdi155000.clof_android.data.MovieRepository
@@ -29,7 +30,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         viewModelScope.launch {
-            collectionRepository.addMissingCollections(listOf("main", "watched"))
+            collectionRepository.addMissingCollections(CollectionNames.DEFAULT)
             genreRepository.addMissingGenres(AppDatabase.defaultGenres)
         }
     }
@@ -45,7 +46,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         collectionRepository.collections.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = listOf("main", "watched")
+            initialValue = CollectionNames.DEFAULT
         )
 
     val movies: StateFlow<List<MovieEntity>> =
@@ -79,7 +80,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         isSeries: Boolean = false,
         season: Int = 0,
         episode: Int = 0,
-        collection: String = "main",
+        collection: String = CollectionNames.MAIN,
         onComplete: () -> Unit = {}
     ) {
         viewModelScope.launch {

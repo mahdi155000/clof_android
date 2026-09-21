@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.mahdi155000.clof_android.data.CollectionNames
 import com.mahdi155000.clof_android.viewmodel.MovieViewModel
 
 @Composable
@@ -146,7 +147,7 @@ fun CollectionsScreen(
                                         editingCollection = collection
                                         editedName = collection
                                     },
-                                    enabled = collection != "main"
+                                    enabled = !CollectionNames.isReserved(collection)
                                 ) {
                                     Text("Rename")
                                 }
@@ -157,13 +158,13 @@ fun CollectionsScreen(
                                         movieViewModel.removeCollection(collection) { removed ->
                                             message = if (removed) {
                                                 onCollectionRemoved(collection)
-                                                "Collection removed; its movies moved to main."
+                                                "Collection removed; its movies moved to ${CollectionNames.MAIN}."
                                             } else {
-                                                "The main collection cannot be removed."
+                                                "Reserved collections cannot be removed."
                                             }
                                         }
                                     },
-                                    enabled = collection != "main"
+                                    enabled = !CollectionNames.isReserved(collection)
                                 ) {
                                     Text("Remove")
                                 }

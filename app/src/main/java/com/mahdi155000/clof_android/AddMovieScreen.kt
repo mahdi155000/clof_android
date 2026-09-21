@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.mahdi155000.clof_android.data.CollectionNames
 import com.mahdi155000.clof_android.viewmodel.MovieViewModel
 
 @Composable
@@ -35,7 +36,7 @@ fun AddMovieScreen(
 ) {
     var title by remember { mutableStateOf("") }
     var genresForMovie by remember { mutableStateOf<List<String>>(emptyList()) }
-    var collection by remember { mutableStateOf("main") }
+    var collection by remember { mutableStateOf(CollectionNames.MAIN) }
     var isSeries by remember { mutableStateOf(false) }
     var season by remember { mutableStateOf("1") }
     var episode by remember { mutableStateOf("1") }
@@ -139,7 +140,7 @@ fun AddMovieScreen(
                 movieViewModel.addMovie(
                     title = title.trim(),
                     genre = genresForMovie.joinToString(", "),
-                    collection = collection.trim().ifBlank { "main" },
+                    collection = collection.trim().ifBlank { CollectionNames.MAIN },
                     isSeries = isSeries,
                     season = if (isSeries) {
                         season.toIntOrNull() ?: 1
