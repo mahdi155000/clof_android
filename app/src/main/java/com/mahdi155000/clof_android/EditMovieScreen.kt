@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -45,6 +46,7 @@ fun EditMovieScreen(
     var season by remember { mutableStateOf(movie.season.toString()) }
     var episode by remember { mutableStateOf(movie.episode.toString()) }
     var isSaving by remember { mutableStateOf(false) }
+    var saveError by remember { mutableStateOf<String?>(null) }
     val collections by movieViewModel.collections.collectAsState()
     val genres by movieViewModel.genres.collectAsState()
 
@@ -132,6 +134,14 @@ fun EditMovieScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        saveError?.let { message ->
+            Text(
+                text = message,
+                color = MaterialTheme.colorScheme.error
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
         Button(
             onClick = {
                 if (title.isBlank() || isSaving) {
@@ -139,6 +149,7 @@ fun EditMovieScreen(
                 }
 
                 isSaving = true
+                saveError = null
 
                 val updatedMovie = movie.withEdits(
                     title = title,
@@ -149,9 +160,17 @@ fun EditMovieScreen(
                     episode = episode
                 )
 
-                movieViewModel.updateMovie(updatedMovie) {
-                    onMovieUpdated()
-                }
+                movieViewModel.updateMovie(
+                    movie = updatedMovie,
+                    onComplete = {
+                        isSaving = false
+                        onMovieUpdated()
+                    },
+                    onError = {
+                        isSaving = false
+                        saveError = "Couldn't update the movie. Please try again."
+                    }
+                )
             },
             modifier = Modifier.fillMaxWidth(),
             enabled = title.isNotBlank() && !isSaving

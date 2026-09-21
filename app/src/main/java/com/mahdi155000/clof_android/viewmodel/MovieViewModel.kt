@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 class MovieViewModel(application: Application) : AndroidViewModel(application) {
@@ -81,21 +82,28 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         season: Int = 0,
         episode: Int = 0,
         collection: String = CollectionNames.MAIN,
-        onComplete: () -> Unit = {}
+        onComplete: () -> Unit = {},
+        onError: (Throwable) -> Unit = {}
     ) {
         viewModelScope.launch {
-            repository.insertMovie(
-                MovieEntity(
-                    title = title,
-                    genre = genre,
-                    isSeries = isSeries,
-                    season = season,
-                    episode = episode,
-                    collection = collection
+            try {
+                repository.insertMovie(
+                    MovieEntity(
+                        title = title,
+                        genre = genre,
+                        isSeries = isSeries,
+                        season = season,
+                        episode = episode,
+                        collection = collection
+                    )
                 )
-            )
 
-            onComplete()
+                onComplete()
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                onError(exception)
+            }
         }
     }
 
@@ -228,11 +236,18 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updateMovie(
         movie: MovieEntity,
-        onComplete: () -> Unit = {}
+        onComplete: () -> Unit = {},
+        onError: (Throwable) -> Unit = {}
     ) {
         viewModelScope.launch {
-            repository.updateMovie(movie)
-            onComplete()
+            try {
+                repository.updateMovie(movie)
+                onComplete()
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                onError(exception)
+            }
         }
     }
 }

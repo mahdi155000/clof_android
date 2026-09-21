@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -41,6 +42,7 @@ fun AddMovieScreen(
     var season by remember { mutableStateOf("1") }
     var episode by remember { mutableStateOf("1") }
     var isSaving by remember { mutableStateOf(false) }
+    var saveError by remember { mutableStateOf<String?>(null) }
     val collections by movieViewModel.collections.collectAsState()
     val genres by movieViewModel.genres.collectAsState()
 
@@ -129,6 +131,14 @@ fun AddMovieScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        saveError?.let { message ->
+            Text(
+                text = message,
+                color = MaterialTheme.colorScheme.error
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
         Button(
             onClick = {
                 if (title.isBlank() || isSaving) {
@@ -136,6 +146,7 @@ fun AddMovieScreen(
                 }
 
                 isSaving = true
+                saveError = null
 
                 movieViewModel.addMovie(
                     title = title.trim(),
@@ -153,7 +164,12 @@ fun AddMovieScreen(
                         0
                     },
                     onComplete = {
+                        isSaving = false
                         onMovieAdded()
+                    },
+                    onError = {
+                        isSaving = false
+                        saveError = "Couldn't add the movie. Please try again."
                     }
                 )
             },
