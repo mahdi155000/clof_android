@@ -13,6 +13,20 @@ class MovieEditsTest {
     }
 
     @Test
+    fun deduplicateMoviesByTitle_keepsFirstRecordInImportOrder() {
+        val movies = deduplicateMoviesByTitle(
+            listOf(
+                MovieEntity(title = "  The Matrix ", genre = "First"),
+                MovieEntity(title = "the matrix", genre = "Second"),
+                MovieEntity(title = "Alien", genre = "Third")
+            )
+        )
+
+        assertEquals(listOf("  The Matrix ", "Alien"), movies.map { it.title })
+        assertEquals(listOf("First", "Third"), movies.map { it.genre })
+    }
+
+    @Test
     fun positiveIntOrNull_rejectsZeroNegativeAndNonNumericValues() {
         assertEquals(4, " 4 ".toPositiveIntOrNull())
         assertEquals(null, "0".toPositiveIntOrNull())

@@ -32,7 +32,8 @@ class ClofDatabaseImporter(
                 temporaryDatabase.outputStream().use(input::copyTo)
             } ?: throw IOException("Unable to read the selected database file.")
 
-            val importedMovies = readMovies(temporaryDatabase)
+            val importedRecords = readMovies(temporaryDatabase)
+            val importedMovies = deduplicateMoviesByTitle(importedRecords)
             collectionRepository.addMissingCollections(importedMovies.map { it.collection }.toSet())
             genreRepository.addMissingGenres(
                 importedMovies
@@ -43,7 +44,7 @@ class ClofDatabaseImporter(
             val inserted = repository.insertMissingMovies(importedMovies)
             ImportResult(
                 imported = inserted,
-                skipped = importedMovies.size - inserted
+                skipped = importedRecords.size - importedMovies.size + importedMovies.size - inserted
             )
         } finally {
             temporaryDatabase.delete()
@@ -66,13 +67,13 @@ class ClofDatabaseImporter(
                 val episodeColumn = cursor.optionalColumn("episode")
                 val watchedColumn = cursor.optionalColumn("watched")
                 val collectionColumn = cursor.optionalColumn("collection")
-                val moviesByTitle = linkedMapOf<String, MovieEntity>()
+                val movies = mutableListOf<MovieEntity>()
 
                 while (cursor.moveToNext()) {
                     val title = normalizeMovieTitle(cursor.getString(titleColumn).orEmpty())
                     if (title.isBlank()) continue
 
-                    moviesByTitle[movieTitleKey(title)] = MovieEntity(
+                    movies += MovieEntity(
                         title = title,
                         genre = cursor.stringAt(genreColumn),
                         isSeries = cursor.intAt(seriesColumn) != 0,
@@ -84,7 +85,7 @@ class ClofDatabaseImporter(
                     )
                 }
 
-                moviesByTitle.values.toList()
+                movies
             }
         } finally {
             database.close()
