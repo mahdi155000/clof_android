@@ -7,6 +7,12 @@ import org.junit.Test
 class MovieEditsTest {
 
     @Test
+    fun movieTitleKey_trimsAndIgnoresCase() {
+        assertEquals("the matrix", movieTitleKey("  The Matrix "))
+        assertEquals(movieTitleKey("The Matrix"), movieTitleKey("the matrix"))
+    }
+
+    @Test
     fun positiveIntOrNull_rejectsZeroNegativeAndNonNumericValues() {
         assertEquals(4, " 4 ".toPositiveIntOrNull())
         assertEquals(null, "0".toPositiveIntOrNull())

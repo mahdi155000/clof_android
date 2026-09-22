@@ -26,18 +26,38 @@ interface MovieDao {
     @Query("SELECT * FROM movies WHERE id = :id")
     suspend fun getMovie(id: Int): MovieEntity?
 
-    @Query("SELECT * FROM movies WHERE title = :title LIMIT 1")
+    @Query("SELECT * FROM movies WHERE LOWER(TRIM(title)) = LOWER(TRIM(:title)) LIMIT 1")
     suspend fun getMovieByTitle(title: String): MovieEntity?
+
+    @Query("""
+        SELECT * FROM movies
+        WHERE LOWER(TRIM(title)) = LOWER(TRIM(:title)) AND id != :id
+        LIMIT 1
+    """)
+    suspend fun getMovieByTitleExcludingId(title: String, id: Int): MovieEntity?
 
     @Insert
     suspend fun insertMovie(movie: MovieEntity)
 
     @Transaction
+    suspend fun insertMovieIfMissing(movie: MovieEntity): Boolean {
+        if (getMovieByTitle(movie.title) != null) {
+            return false
+        }
+        insertMovie(movie.copy(title = normalizeMovieTitle(movie.title)))
+        return true
+    }
+
+    @Transaction
     suspend fun insertMissingMovies(movies: List<MovieEntity>): Int {
         var insertedCount = 0
+        val titles = mutableSetOf<String>()
         movies.forEach { movie ->
-            if (getMovieByTitle(movie.title) == null) {
-                insertMovie(movie)
+            val normalizedMovie = movie.copy(title = normalizeMovieTitle(movie.title))
+            if (movieTitleKey(normalizedMovie.title) !in titles &&
+                insertMovieIfMissing(normalizedMovie)
+            ) {
+                titles += movieTitleKey(normalizedMovie.title)
                 insertedCount++
             }
         }
@@ -46,6 +66,15 @@ interface MovieDao {
 
     @Update
     suspend fun updateMovie(movie: MovieEntity)
+
+    @Transaction
+    suspend fun updateMovieIfUnique(movie: MovieEntity): Boolean {
+        if (getMovieByTitleExcludingId(movie.title, movie.id) != null) {
+            return false
+        }
+        updateMovie(movie.copy(title = normalizeMovieTitle(movie.title)))
+        return true
+    }
 
     @Delete
     suspend fun deleteMovie(movie: MovieEntity)

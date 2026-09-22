@@ -11,6 +11,7 @@ import com.mahdi155000.clof_android.data.ImportResult
 import com.mahdi155000.clof_android.data.MovieEntity
 import com.mahdi155000.clof_android.data.MovieRepository
 import com.mahdi155000.clof_android.data.GenreRepository
+import com.mahdi155000.clof_android.data.normalizeMovieTitle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -83,13 +84,14 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         episode: Int = 0,
         collection: String = CollectionNames.MAIN,
         onComplete: () -> Unit = {},
+        onDuplicate: () -> Unit = {},
         onError: (Throwable) -> Unit = {}
     ) {
         viewModelScope.launch {
             try {
-                repository.insertMovie(
+                val inserted = repository.insertMovie(
                     MovieEntity(
-                        title = title,
+                        title = normalizeMovieTitle(title),
                         genre = genre,
                         isSeries = isSeries,
                         season = season,
@@ -98,7 +100,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 )
 
-                onComplete()
+                if (inserted) onComplete() else onDuplicate()
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Exception) {
@@ -237,12 +239,16 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
     fun updateMovie(
         movie: MovieEntity,
         onComplete: () -> Unit = {},
+        onDuplicate: () -> Unit = {},
         onError: (Throwable) -> Unit = {}
     ) {
         viewModelScope.launch {
             try {
-                repository.updateMovie(movie)
-                onComplete()
+                if (repository.updateMovie(movie)) {
+                    onComplete()
+                } else {
+                    onDuplicate()
+                }
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Exception) {

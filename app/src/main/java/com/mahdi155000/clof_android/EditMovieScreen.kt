@@ -196,6 +196,10 @@ fun EditMovieScreen(
                         isSaving = false
                         onMovieUpdated()
                     },
+                    onDuplicate = {
+                        isSaving = false
+                        saveError = "A movie with this title already exists."
+                    },
                     onError = {
                         isSaving = false
                         saveError = "Couldn't update the movie. Please try again."

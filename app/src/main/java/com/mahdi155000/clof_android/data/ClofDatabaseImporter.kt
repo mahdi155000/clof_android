@@ -69,10 +69,10 @@ class ClofDatabaseImporter(
                 val moviesByTitle = linkedMapOf<String, MovieEntity>()
 
                 while (cursor.moveToNext()) {
-                    val title = cursor.getString(titleColumn)?.trim().orEmpty()
+                    val title = normalizeMovieTitle(cursor.getString(titleColumn).orEmpty())
                     if (title.isBlank()) continue
 
-                    moviesByTitle[title] = MovieEntity(
+                    moviesByTitle[movieTitleKey(title)] = MovieEntity(
                         title = title,
                         genre = cursor.stringAt(genreColumn),
                         isSeries = cursor.intAt(seriesColumn) != 0,

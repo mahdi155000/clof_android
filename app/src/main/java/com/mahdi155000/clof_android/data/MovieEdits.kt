@@ -12,7 +12,7 @@ fun MovieEntity.withEdits(
     season: String,
     episode: String
 ): MovieEntity = copy(
-    title = title.trim(),
+    title = normalizeMovieTitle(title),
     genre = genre.trim(),
     collection = collection.trim().ifBlank { CollectionNames.MAIN },
     isSeries = isSeries,

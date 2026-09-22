@@ -189,6 +189,10 @@ fun AddMovieScreen(
                         isSaving = false
                         onMovieAdded()
                     },
+                    onDuplicate = {
+                        isSaving = false
+                        saveError = "A movie with this title already exists."
+                    },
                     onError = {
                         isSaving = false
                         saveError = "Couldn't add the movie. Please try again."

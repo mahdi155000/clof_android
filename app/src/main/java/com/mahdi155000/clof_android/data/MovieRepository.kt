@@ -19,16 +19,16 @@ class MovieRepository(
         return movieDao.getMovie(id)
     }
 
-    suspend fun insertMovie(movie: MovieEntity) {
-        movieDao.insertMovie(movie)
+    suspend fun insertMovie(movie: MovieEntity): Boolean {
+        return movieDao.insertMovieIfMissing(movie)
     }
 
     suspend fun insertMissingMovies(movies: List<MovieEntity>): Int {
         return movieDao.insertMissingMovies(movies)
     }
 
-    suspend fun updateMovie(movie: MovieEntity) {
-        movieDao.updateMovie(movie)
+    suspend fun updateMovie(movie: MovieEntity): Boolean {
+        return movieDao.updateMovieIfUnique(movie)
     }
 
     suspend fun deleteMovie(movie: MovieEntity) {
