@@ -44,7 +44,12 @@ interface MovieDao {
         if (getMovieByTitle(movie.title) != null) {
             return false
         }
-        insertMovie(movie.copy(title = normalizeMovieTitle(movie.title)))
+        insertMovie(
+            movie.copy(
+                title = normalizeMovieTitle(movie.title),
+                createdAt = movie.createdAt.takeIf { it > 0 } ?: System.currentTimeMillis()
+            )
+        )
         return true
     }
 

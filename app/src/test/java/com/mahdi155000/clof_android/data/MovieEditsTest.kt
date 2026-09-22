@@ -39,6 +39,7 @@ class MovieEditsTest {
         val movie = MovieEntity(
             id = 12,
             title = "Before",
+            createdAt = 1234L,
             watched = true,
             collection = "Archive"
         )
@@ -53,6 +54,7 @@ class MovieEditsTest {
         )
 
         assertEquals(12, edited.id)
+        assertEquals(1234L, edited.createdAt)
         assertTrue(edited.watched)
         assertEquals("After", edited.title)
         assertEquals("Drama", edited.genre)

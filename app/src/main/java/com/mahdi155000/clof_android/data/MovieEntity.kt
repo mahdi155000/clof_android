@@ -1,5 +1,6 @@
 package com.mahdi155000.clof_android.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -10,6 +11,9 @@ data class MovieEntity(
     val id: Int = 0,
 
     val title: String,
+
+    @ColumnInfo(defaultValue = "0")
+    val createdAt: Long = System.currentTimeMillis(),
 
     val genre: String = "",
 

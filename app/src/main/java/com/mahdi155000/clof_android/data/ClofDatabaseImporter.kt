@@ -61,6 +61,7 @@ class ClofDatabaseImporter(
         return try {
             database.rawQuery("SELECT * FROM movies ORDER BY id", null).use { cursor ->
                 val titleColumn = cursor.requiredColumn("title")
+                val createdAtColumn = cursor.optionalColumn("created_at", "createdAt")
                 val genreColumn = cursor.optionalColumn("genre")
                 val seriesColumn = cursor.optionalColumn("is_series", "isSeries")
                 val seasonColumn = cursor.optionalColumn("season")
@@ -75,6 +76,7 @@ class ClofDatabaseImporter(
 
                     movies += MovieEntity(
                         title = title,
+                        createdAt = cursor.longAt(createdAtColumn),
                         genre = cursor.stringAt(genreColumn),
                         isSeries = cursor.intAt(seriesColumn) != 0,
                         season = cursor.intAt(seasonColumn),
@@ -109,5 +111,9 @@ class ClofDatabaseImporter(
 
     private fun android.database.Cursor.intAt(column: Int): Int {
         return if (column >= 0 && !isNull(column)) getInt(column) else 0
+    }
+
+    private fun android.database.Cursor.longAt(column: Int): Long {
+        return if (column >= 0 && !isNull(column)) getLong(column) else 0L
     }
 }

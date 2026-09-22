@@ -733,11 +733,11 @@ fun MovieList(
                 }
 
                 "Oldest Added" -> list.sortedBy {
-                    it.id
+                    it.createdAt
                 }
 
                 else -> list.sortedByDescending {
-                    it.id
+                    it.createdAt
                 }
             }
         }
