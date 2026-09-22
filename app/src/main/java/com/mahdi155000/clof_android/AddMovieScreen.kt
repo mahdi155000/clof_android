@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mahdi155000.clof_android.data.CollectionNames
+import com.mahdi155000.clof_android.data.toPositiveIntOrNull
 import com.mahdi155000.clof_android.viewmodel.MovieViewModel
 
 @Composable
@@ -41,6 +42,8 @@ fun AddMovieScreen(
     var isSeries by remember { mutableStateOf(false) }
     var season by remember { mutableStateOf("1") }
     var episode by remember { mutableStateOf("1") }
+    var seasonError by remember { mutableStateOf<String?>(null) }
+    var episodeError by remember { mutableStateOf<String?>(null) }
     var isSaving by remember { mutableStateOf(false) }
     var saveError by remember { mutableStateOf<String?>(null) }
     val collections by movieViewModel.collections.collectAsState()
@@ -104,9 +107,14 @@ fun AddMovieScreen(
 
             OutlinedTextField(
                 value = season,
-                onValueChange = { season = it },
+                onValueChange = {
+                    season = it
+                    seasonError = null
+                },
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Season") },
+                isError = seasonError != null,
+                supportingText = seasonError?.let { message -> { Text(message) } },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number
                 ),
@@ -118,9 +126,14 @@ fun AddMovieScreen(
 
             OutlinedTextField(
                 value = episode,
-                onValueChange = { episode = it },
+                onValueChange = {
+                    episode = it
+                    episodeError = null
+                },
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Episode") },
+                isError = episodeError != null,
+                supportingText = episodeError?.let { message -> { Text(message) } },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number
                 ),
@@ -141,7 +154,24 @@ fun AddMovieScreen(
 
         Button(
             onClick = {
-                if (title.isBlank() || isSaving) {
+                if (isSaving) {
+                    return@Button
+                }
+
+                val parsedSeason = if (isSeries) season.toPositiveIntOrNull() else 0
+                val parsedEpisode = if (isSeries) episode.toPositiveIntOrNull() else 0
+                seasonError = if (isSeries && parsedSeason == null) {
+                    "Season must be a positive integer."
+                } else {
+                    null
+                }
+                episodeError = if (isSeries && parsedEpisode == null) {
+                    "Episode must be a positive integer."
+                } else {
+                    null
+                }
+
+                if (title.isBlank() || (isSeries && (parsedSeason == null || parsedEpisode == null))) {
                     return@Button
                 }
 
@@ -153,16 +183,8 @@ fun AddMovieScreen(
                     genre = genresForMovie.joinToString(", "),
                     collection = collection.trim().ifBlank { CollectionNames.MAIN },
                     isSeries = isSeries,
-                    season = if (isSeries) {
-                        season.toIntOrNull() ?: 1
-                    } else {
-                        0
-                    },
-                    episode = if (isSeries) {
-                        episode.toIntOrNull() ?: 1
-                    } else {
-                        0
-                    },
+                    season = parsedSeason ?: 0,
+                    episode = parsedEpisode ?: 0,
                     onComplete = {
                         isSaving = false
                         onMovieAdded()

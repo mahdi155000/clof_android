@@ -7,6 +7,14 @@ import org.junit.Test
 class MovieEditsTest {
 
     @Test
+    fun positiveIntOrNull_rejectsZeroNegativeAndNonNumericValues() {
+        assertEquals(4, " 4 ".toPositiveIntOrNull())
+        assertEquals(null, "0".toPositiveIntOrNull())
+        assertEquals(null, "-1".toPositiveIntOrNull())
+        assertEquals(null, "invalid".toPositiveIntOrNull())
+    }
+
+    @Test
     fun withEdits_keepsIdentityAndWatchedStatus() {
         val movie = MovieEntity(
             id = 12,
@@ -31,5 +39,24 @@ class MovieEditsTest {
         assertEquals("main", edited.collection)
         assertEquals(2, edited.season)
         assertEquals(3, edited.episode)
+    }
+
+    @Test
+    fun withEdits_rejectsInvalidSeriesNumbers() {
+        val movie = MovieEntity(title = "Movie")
+
+        try {
+            movie.withEdits(
+                title = "Movie",
+                genre = "",
+                collection = "",
+                isSeries = true,
+                season = "0",
+                episode = "not a number"
+            )
+            throw AssertionError("Expected invalid series numbers to be rejected")
+        } catch (exception: IllegalArgumentException) {
+            assertEquals("Season must be a positive integer.", exception.message)
+        }
     }
 }

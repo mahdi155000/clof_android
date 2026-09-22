@@ -1,5 +1,8 @@
 package com.mahdi155000.clof_android.data
 
+fun String.toPositiveIntOrNull(): Int? =
+    trim().toIntOrNull()?.takeIf { it > 0 }
+
 /** Creates an edited movie while retaining state that is not editable in the form. */
 fun MovieEntity.withEdits(
     title: String,
@@ -13,6 +16,16 @@ fun MovieEntity.withEdits(
     genre = genre.trim(),
     collection = collection.trim().ifBlank { CollectionNames.MAIN },
     isSeries = isSeries,
-    season = if (isSeries) season.toIntOrNull() ?: 1 else 0,
-    episode = if (isSeries) episode.toIntOrNull() ?: 1 else 0
+    season = if (isSeries) {
+        season.toPositiveIntOrNull()
+            ?: throw IllegalArgumentException("Season must be a positive integer.")
+    } else {
+        0
+    },
+    episode = if (isSeries) {
+        episode.toPositiveIntOrNull()
+            ?: throw IllegalArgumentException("Episode must be a positive integer.")
+    } else {
+        0
+    }
 )

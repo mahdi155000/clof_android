@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mahdi155000.clof_android.data.MovieEntity
+import com.mahdi155000.clof_android.data.toPositiveIntOrNull
 import com.mahdi155000.clof_android.data.withEdits
 import com.mahdi155000.clof_android.viewmodel.MovieViewModel
 
@@ -45,6 +46,8 @@ fun EditMovieScreen(
     var isSeries by remember { mutableStateOf(movie.isSeries) }
     var season by remember { mutableStateOf(movie.season.toString()) }
     var episode by remember { mutableStateOf(movie.episode.toString()) }
+    var seasonError by remember { mutableStateOf<String?>(null) }
+    var episodeError by remember { mutableStateOf<String?>(null) }
     var isSaving by remember { mutableStateOf(false) }
     var saveError by remember { mutableStateOf<String?>(null) }
     val collections by movieViewModel.collections.collectAsState()
@@ -107,9 +110,14 @@ fun EditMovieScreen(
 
             OutlinedTextField(
                 value = season,
-                onValueChange = { season = it },
+                onValueChange = {
+                    season = it
+                    seasonError = null
+                },
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Season") },
+                isError = seasonError != null,
+                supportingText = seasonError?.let { message -> { Text(message) } },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number
                 ),
@@ -121,9 +129,14 @@ fun EditMovieScreen(
 
             OutlinedTextField(
                 value = episode,
-                onValueChange = { episode = it },
+                onValueChange = {
+                    episode = it
+                    episodeError = null
+                },
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Episode") },
+                isError = episodeError != null,
+                supportingText = episodeError?.let { message -> { Text(message) } },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number
                 ),
@@ -144,7 +157,24 @@ fun EditMovieScreen(
 
         Button(
             onClick = {
-                if (title.isBlank() || isSaving) {
+                if (isSaving) {
+                    return@Button
+                }
+
+                val parsedSeason = if (isSeries) season.toPositiveIntOrNull() else 0
+                val parsedEpisode = if (isSeries) episode.toPositiveIntOrNull() else 0
+                seasonError = if (isSeries && parsedSeason == null) {
+                    "Season must be a positive integer."
+                } else {
+                    null
+                }
+                episodeError = if (isSeries && parsedEpisode == null) {
+                    "Episode must be a positive integer."
+                } else {
+                    null
+                }
+
+                if (title.isBlank() || (isSeries && (parsedSeason == null || parsedEpisode == null))) {
                     return@Button
                 }
 
