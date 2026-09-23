@@ -43,6 +43,7 @@ fun AddMovieScreen(
     var isSeries by rememberSaveable { mutableStateOf(false) }
     var season by rememberSaveable { mutableStateOf("1") }
     var episode by rememberSaveable { mutableStateOf("1") }
+    var notes by rememberSaveable { mutableStateOf("") }
     var seasonError by remember { mutableStateOf<String?>(null) }
     var episodeError by remember { mutableStateOf<String?>(null) }
     var isSaving by remember { mutableStateOf(false) }
@@ -143,6 +144,17 @@ fun AddMovieScreen(
             )
         }
 
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = notes,
+            onValueChange = { notes = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Notes (optional)") },
+            minLines = 3,
+            enabled = !isSaving
+        )
+
         Spacer(modifier = Modifier.height(24.dp))
 
         saveError?.let { message ->
@@ -186,6 +198,7 @@ fun AddMovieScreen(
                     isSeries = isSeries,
                     season = parsedSeason ?: 0,
                     episode = parsedEpisode ?: 0,
+                    notes = notes,
                     onComplete = {
                         isSaving = false
                         onMovieAdded()

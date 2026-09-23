@@ -68,6 +68,7 @@ class ClofDatabaseImporter(
                 val episodeColumn = cursor.optionalColumn("episode")
                 val watchedColumn = cursor.optionalColumn("watched")
                 val collectionColumn = cursor.optionalColumn("collection")
+                val notesColumn = cursor.optionalColumn("notes")
                 val movies = mutableListOf<MovieEntity>()
 
                 while (cursor.moveToNext()) {
@@ -85,7 +86,8 @@ class ClofDatabaseImporter(
                             .takeIf { cursor.intAt(seriesColumn) != 0 } ?: 0,
                         watched = cursor.intAt(watchedColumn) != 0,
                         collection = cursor.stringAt(collectionColumn)
-                            .ifBlank { CollectionNames.MAIN }
+                            .ifBlank { CollectionNames.MAIN },
+                        notes = cursor.stringAt(notesColumn).ifBlank { null }
                     )
                 }
 

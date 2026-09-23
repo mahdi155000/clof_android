@@ -85,6 +85,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         season: Int = 0,
         episode: Int = 0,
         collection: String = CollectionNames.MAIN,
+        notes: String? = null,
         onComplete: () -> Unit = {},
         onDuplicate: () -> Unit = {},
         onError: (Throwable) -> Unit = {}
@@ -98,7 +99,8 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
                         isSeries = isSeries,
                         season = season,
                         episode = episode,
-                        collection = collection
+                        collection = collection,
+                        notes = notes?.trim()?.ifBlank { null }
                     )
                 )
 
@@ -108,6 +110,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             } catch (exception: Exception) {
                 onError(exception)
             }
+
         }
     }
 

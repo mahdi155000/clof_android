@@ -47,6 +47,7 @@ fun EditMovieScreen(
     var isSeries by rememberSaveable(movie.id) { mutableStateOf(movie.isSeries) }
     var season by rememberSaveable(movie.id) { mutableStateOf(movie.season.toString()) }
     var episode by rememberSaveable(movie.id) { mutableStateOf(movie.episode.toString()) }
+    var notes by rememberSaveable(movie.id) { mutableStateOf(movie.notes.orEmpty()) }
     var seasonError by remember { mutableStateOf<String?>(null) }
     var episodeError by remember { mutableStateOf<String?>(null) }
     var isSaving by remember { mutableStateOf(false) }
@@ -146,6 +147,17 @@ fun EditMovieScreen(
             )
         }
 
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = notes,
+            onValueChange = { notes = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Notes (optional)") },
+            minLines = 3,
+            enabled = !isSaving
+        )
+
         Spacer(modifier = Modifier.height(24.dp))
 
         saveError?.let { message ->
@@ -188,7 +200,8 @@ fun EditMovieScreen(
                     collection = collection,
                     isSeries = isSeries,
                     season = season,
-                    episode = episode
+                    episode = episode,
+                    notes = notes
                 )
 
                 movieViewModel.updateMovie(

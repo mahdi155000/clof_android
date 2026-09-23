@@ -10,7 +10,8 @@ fun MovieEntity.withEdits(
     collection: String,
     isSeries: Boolean,
     season: String,
-    episode: String
+    episode: String,
+    notes: String = ""
 ): MovieEntity = copy(
     title = normalizeMovieTitle(title),
     genre = genre.trim(),
@@ -25,7 +26,6 @@ fun MovieEntity.withEdits(
     episode = if (isSeries) {
         episode.toPositiveIntOrNull()
             ?: throw IllegalArgumentException("Episode must be a positive integer.")
-    } else {
-        0
-    }
+    } else 0,
+    notes = notes.trim().ifBlank { null }
 )

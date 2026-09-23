@@ -101,6 +101,15 @@ fun MovieDetailsScreen(
             )
         }
 
+        if (!currentMovie.notes.isNullOrBlank()) {
+            Text(
+                text = "Notes: ${currentMovie.notes}",
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
         Text(
             text = if (currentMovie.isSeries) {
                 "Type: Series"

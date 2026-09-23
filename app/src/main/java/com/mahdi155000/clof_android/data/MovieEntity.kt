@@ -27,5 +27,7 @@ data class MovieEntity(
 
     val collection: String = CollectionNames.MAIN,
 
-    val inTrash: Boolean = false
+    val inTrash: Boolean = false,
+
+    val notes: String? = null
 )
