@@ -30,7 +30,8 @@ fun MovieDetailsScreen(
     movieId: Int,
     movieViewModel: MovieViewModel,
     onBack: () -> Unit,
-    onEdit: (MovieEntity) -> Unit
+    onEdit: (MovieEntity) -> Unit,
+    onShowUndo: (String, () -> Unit) -> Unit
 ) {
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     val movie by movieViewModel
@@ -181,7 +182,13 @@ fun MovieDetailsScreen(
 
             Button(
                 onClick = {
-                    movieViewModel.setWatched(currentMovie, !currentMovie.watched)
+                    val previous = currentMovie.watched
+                    movieViewModel.setWatched(currentMovie, !previous)
+                    onShowUndo(
+                        "Series marked ${if (previous) "in progress" else "completed"}"
+                    ) {
+                        movieViewModel.setWatched(currentMovie, previous)
+                    }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -207,10 +214,14 @@ fun MovieDetailsScreen(
 
             Button(
                 onClick = {
+                    val previous = currentMovie.watched
                     movieViewModel.setWatched(
                         currentMovie,
-                        !currentMovie.watched
+                        !previous
                     )
+                    onShowUndo("Marked ${if (previous) "unwatched" else "watched"}") {
+                        movieViewModel.setWatched(currentMovie, previous)
+                    }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {

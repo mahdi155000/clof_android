@@ -29,7 +29,8 @@ import com.mahdi155000.clof_android.viewmodel.MovieViewModel
 @Composable
 fun GenresScreen(
     movieViewModel: MovieViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onShowUndo: (String, () -> Unit) -> Unit
 ) {
     val genres by movieViewModel.genres.collectAsState()
     var newGenreName by remember { mutableStateOf("") }
@@ -175,6 +176,9 @@ fun GenresScreen(
                             genreToRemove = null
                             movieViewModel.removeGenre(genre) { removed ->
                                 message = if (removed) {
+                                    onShowUndo("Removed genre \"$genre\"") {
+                                        movieViewModel.restoreGenre(genre, affectedMovies)
+                                    }
                                     "Genre removed from the list and its movies."
                                 } else {
                                     "Genre could not be removed."

@@ -151,6 +151,19 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun restoreMovieState(movie: MovieEntity) {
+        viewModelScope.launch {
+            repository.updateMovie(movie)
+        }
+    }
+
+    fun restoreGenre(name: String, movies: List<MovieEntity>) {
+        viewModelScope.launch {
+            genreRepository.addGenre(name)
+            movies.forEach { repository.updateMovie(it) }
+        }
+    }
+
     fun nextEpisode(movie: MovieEntity) {
         viewModelScope.launch {
             repository.nextEpisode(movie.id)

@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -34,6 +35,9 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -116,6 +120,7 @@ fun ClofApp(
     var isImporting by remember { mutableStateOf(false) }
     var isExporting by remember { mutableStateOf(false) }
     var importMessage by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -183,6 +188,13 @@ fun ClofApp(
     val onExport = {
         if (!isImporting && !isExporting) {
             exportLauncher.launch("clof-export.db")
+        }
+    }
+    val showUndoSnackbar: (String, () -> Unit) -> Unit = { message, undo ->
+        drawerScope.launch {
+            if (snackbarHostState.showSnackbar(message, "Undo") == SnackbarResult.ActionPerformed) {
+                undo()
+            }
         }
     }
 
@@ -355,8 +367,10 @@ fun ClofApp(
             }
         }
     ) {
+        Box(modifier = Modifier.fillMaxSize()) {
         if (showSettingsScreen) {
             Scaffold(
+                snackbarHost = { SnackbarHost(snackbarHostState) },
                 topBar = {
                     ClofTopBar(
                         darkMode = darkMode,
@@ -385,6 +399,7 @@ fun ClofApp(
 
         if (showCollectionsScreen) {
             Scaffold(
+                snackbarHost = { SnackbarHost(snackbarHostState) },
                 topBar = {
                     ClofTopBar(
                         darkMode = darkMode,
@@ -428,6 +443,7 @@ fun ClofApp(
 
         if (showGenresScreen) {
             Scaffold(
+                snackbarHost = { SnackbarHost(snackbarHostState) },
                 topBar = {
                     ClofTopBar(
                         darkMode = darkMode,
@@ -448,7 +464,8 @@ fun ClofApp(
                 ) {
                     GenresScreen(
                         movieViewModel = movieViewModel,
-                        onBack = { showGenresScreen = false }
+                        onBack = { showGenresScreen = false },
+                        onShowUndo = showUndoSnackbar
                     )
                 }
             }
@@ -457,6 +474,7 @@ fun ClofApp(
 
         if (showTrashScreen) {
             Scaffold(
+                snackbarHost = { SnackbarHost(snackbarHostState) },
                 topBar = {
                     ClofTopBar(
                         darkMode = darkMode,
@@ -488,6 +506,7 @@ fun ClofApp(
             val movie = movieBeingViewed!!
 
             Scaffold(
+                snackbarHost = { SnackbarHost(snackbarHostState) },
                 topBar = {
                     ClofTopBar(
                         darkMode = darkMode,
@@ -515,7 +534,8 @@ fun ClofApp(
                         onEdit = { currentMovie ->
                             movieBeingEdited = currentMovie
                             movieBeingViewed = null
-                        }
+                        },
+                        onShowUndo = showUndoSnackbar
                     )
                 }
             }
@@ -527,6 +547,7 @@ fun ClofApp(
             val movie = movieBeingEdited!!
 
             Scaffold(
+                snackbarHost = { SnackbarHost(snackbarHostState) },
                 topBar = {
                     ClofTopBar(
                         darkMode = darkMode,
@@ -569,6 +590,7 @@ fun ClofApp(
 
         if (showAddMovieScreen) {
             Scaffold(
+                snackbarHost = { SnackbarHost(snackbarHostState) },
                 topBar = {
                     ClofTopBar(
                         darkMode = darkMode,
@@ -610,6 +632,7 @@ fun ClofApp(
 
         if (showMoveMoviesScreen) {
             Scaffold(
+                snackbarHost = { SnackbarHost(snackbarHostState) },
                 topBar = {
                     ClofTopBar(
                         darkMode = darkMode,
@@ -630,7 +653,8 @@ fun ClofApp(
                 ) {
                     MoveMoviesScreen(
                         movieViewModel = movieViewModel,
-                        onBack = { showMoveMoviesScreen = false }
+                        onBack = { showMoveMoviesScreen = false },
+                        onShowUndo = showUndoSnackbar
                     )
                 }
             }
@@ -645,8 +669,12 @@ fun ClofApp(
                 confirmButton = {
                     Button(
                         onClick = {
+                            val previous = movie
                             movieViewModel.deleteMovie(movie)
                             movieToDelete = null
+                            showUndoSnackbar("Moved \"${movie.title}\" to trash") {
+                                movieViewModel.restoreMovie(previous)
+                            }
                         }
                     ) {
                         Text("Move to Trash")
@@ -695,10 +723,18 @@ fun ClofApp(
                 onDelete = { movieToDelete = it },
                 selectedCollection = selectedCollection,
                 collectionNames = collections,
+                onShowUndo = showUndoSnackbar,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
             )
+        }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        )
         }
     }
 }
@@ -737,6 +773,7 @@ fun MovieList(
     onDelete: (MovieEntity) -> Unit,
     selectedCollection: String? = null,
     collectionNames: List<String> = emptyList(),
+    onShowUndo: (String, () -> Unit) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var searchText by remember {
@@ -1098,7 +1135,8 @@ fun MovieList(
                         movieViewModel = movieViewModel,
                         onMovieClick = onMovieClick,
                         onEdit = onEdit,
-                        onDelete = onDelete
+                        onDelete = onDelete,
+                        onShowUndo = onShowUndo
                     )
 
                     Spacer(
@@ -1135,6 +1173,7 @@ fun MovieItem(
     onMovieClick: (MovieEntity) -> Unit,
     onEdit: (MovieEntity) -> Unit,
     onDelete: (MovieEntity) -> Unit,
+    onShowUndo: (String, () -> Unit) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -1227,10 +1266,14 @@ fun MovieItem(
                         if (movie.isSeries) {
                             movieViewModel.nextEpisode(movie)
                         } else {
+                            val previous = movie.watched
                             movieViewModel.setWatched(
                                 movie,
-                                !movie.watched
+                                !previous
                             )
+                            onShowUndo("Marked \"${movie.title}\" ${if (previous) "unwatched" else "watched"}") {
+                                movieViewModel.setWatched(movie, previous)
+                            }
                         }
                     }
                 ) {
@@ -1266,7 +1309,11 @@ fun MovieItem(
                 ) {
                     Button(
                         onClick = {
+                            val previousCollection = movie.collection
                             movieViewModel.moveMovie(movie, CollectionNames.WATCHED)
+                            onShowUndo("Moved \"${movie.title}\" to ${CollectionNames.WATCHED}") {
+                                movieViewModel.moveMovie(movie, previousCollection)
+                            }
                         }
                     ) {
                         Text("To Watched")

@@ -28,7 +28,8 @@ import com.mahdi155000.clof_android.viewmodel.MovieViewModel
 @Composable
 fun MoveMoviesScreen(
     movieViewModel: MovieViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onShowUndo: (String, () -> Unit) -> Unit
 ) {
     val movies by movieViewModel.movies.collectAsState()
     val collections by movieViewModel.collections.collectAsState()
@@ -73,6 +74,9 @@ fun MoveMoviesScreen(
                                         text = { Text(collection) },
                                         onClick = {
                                             movieViewModel.moveMovie(movie, collection)
+                                            onShowUndo("Moved \"${movie.title}\" to $collection") {
+                                                movieViewModel.moveMovie(movie, movie.collection)
+                                            }
                                             expandedMovieId = null
                                         }
                                     )
