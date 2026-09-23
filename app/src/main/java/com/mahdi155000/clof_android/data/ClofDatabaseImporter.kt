@@ -69,6 +69,8 @@ class ClofDatabaseImporter(
                 val watchedColumn = cursor.optionalColumn("watched")
                 val collectionColumn = cursor.optionalColumn("collection")
                 val notesColumn = cursor.optionalColumn("notes")
+                val pinnedColumn = cursor.optionalColumn("pinned")
+                val customOrderColumn = cursor.optionalColumn("custom_order", "customOrder")
                 val movies = mutableListOf<MovieEntity>()
 
                 while (cursor.moveToNext()) {
@@ -88,6 +90,9 @@ class ClofDatabaseImporter(
                         collection = cursor.stringAt(collectionColumn)
                             .ifBlank { CollectionNames.MAIN },
                         notes = cursor.stringAt(notesColumn).ifBlank { null }
+                            ,
+                        pinned = cursor.intAt(pinnedColumn) != 0,
+                        customOrder = cursor.intAt(customOrderColumn)
                     )
                 }
 

@@ -61,6 +61,14 @@ class MovieRepository(
         movieDao.moveMovie(id, collection)
     }
 
+    suspend fun setPinned(id: Int, pinned: Boolean) {
+        movieDao.setPinned(id, pinned)
+    }
+
+    suspend fun setCustomOrder(id: Int, customOrder: Int) {
+        movieDao.setCustomOrder(id, customOrder)
+    }
+
     suspend fun nextEpisode(id: Int) {
         movieDao.nextEpisode(id)
     }

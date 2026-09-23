@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.AlertDialog
@@ -795,6 +796,7 @@ fun MovieList(
     var sortOption by remember {
         mutableStateOf("Recently Added")
     }
+    var reorderMode by remember { mutableStateOf(false) }
 
     var showFilters by remember {
         mutableStateOf(false)
@@ -853,7 +855,8 @@ fun MovieList(
                     matchesCollection
         }
         .let { list ->
-            when (sortOption) {
+            val ordered = when (sortOption) {
+                "Custom Order" -> list.sortedBy { it.customOrder }
                 "Title A-Z" -> list.sortedBy {
                     it.title.lowercase()
                 }
@@ -892,6 +895,11 @@ fun MovieList(
                     it.createdAt
                 }
             }
+            val sortRanks = ordered.withIndex().associate { it.value.id to it.index }
+            ordered.sortedWith(
+                compareByDescending<MovieEntity> { it.pinned }
+                    .thenBy { sortRanks[it.id] ?: Int.MAX_VALUE }
+            )
         }
 
     Column(
@@ -932,6 +940,13 @@ fun MovieList(
                     "Show Filters"
                 }
             )
+        }
+
+        Button(
+            onClick = { reorderMode = !reorderMode },
+            modifier = Modifier.padding(horizontal = 12.dp)
+        ) {
+            Text(if (reorderMode) "Done selecting" else "Select items")
         }
 
         if (showFilters) {
@@ -1033,6 +1048,18 @@ fun MovieList(
                     .padding(horizontal = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                item {
+                    FilterButton(
+                        text = "Custom",
+                        selected = sortOption == "Custom Order"
+                    ) {
+                        sortOption = if (sortOption == "Custom Order") {
+                            "Recently Added"
+                        } else {
+                            "Custom Order"
+                        }
+                    }
+                }
                 item {
                     FilterButton(
                         text = "All",
@@ -1190,7 +1217,18 @@ fun MovieList(
                         onMovieClick = onMovieClick,
                         onEdit = onEdit,
                         onDelete = onDelete,
-                        onShowUndo = onShowUndo
+                        onShowUndo = onShowUndo,
+                        reorderMode = reorderMode,
+                        onToggleReorderMode = { reorderMode = true },
+                        onMove = { movie, direction ->
+                            val index = filteredMovies.indexOfFirst { it.id == movie.id }
+                            val targetIndex = index + direction
+                            if (index >= 0 && targetIndex in filteredMovies.indices) {
+                                val target = filteredMovies[targetIndex]
+                                movieViewModel.setCustomOrder(movie, target.customOrder)
+                                movieViewModel.setCustomOrder(target, movie.customOrder)
+                            }
+                        }
                     )
 
                     Spacer(
@@ -1228,13 +1266,21 @@ fun MovieItem(
     onEdit: (MovieEntity) -> Unit,
     onDelete: (MovieEntity) -> Unit,
     onShowUndo: (String, () -> Unit) -> Unit,
+    reorderMode: Boolean,
+    onToggleReorderMode: () -> Unit,
+    onMove: (MovieEntity, Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
         onClick = {
             onMovieClick(movie)
         },
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = { onMovieClick(movie) },
+                onLongClick = onToggleReorderMode
+            )
     ) {
         Column(
             modifier = Modifier
@@ -1245,6 +1291,15 @@ fun MovieItem(
                 text = movie.title,
                 style = MaterialTheme.typography.titleLarge
             )
+            if (reorderMode) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { movieViewModel.setPinned(movie, !movie.pinned) }) {
+                        Text(if (movie.pinned) "Unpin" else "Pin")
+                    }
+                    Button(onClick = { onMove(movie, -1) }) { Text("Move up") }
+                    Button(onClick = { onMove(movie, 1) }) { Text("Move down") }
+                }
+            }
 
             Spacer(
                 modifier = Modifier.height(6.dp)

@@ -185,6 +185,18 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun setPinned(movie: MovieEntity, pinned: Boolean) {
+        viewModelScope.launch {
+            repository.setPinned(movie.id, pinned)
+        }
+    }
+
+    fun setCustomOrder(movie: MovieEntity, customOrder: Int) {
+        viewModelScope.launch {
+            repository.setCustomOrder(movie.id, customOrder)
+        }
+    }
+
     fun nextSeason(movie: MovieEntity) {
         viewModelScope.launch {
             repository.nextSeason(movie.id)

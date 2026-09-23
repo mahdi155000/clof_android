@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface MovieDao {
 
-    @Query("SELECT * FROM movies WHERE inTrash = 0 ORDER BY id")
+    @Query("SELECT * FROM movies WHERE inTrash = 0 ORDER BY pinned DESC, customOrder ASC, id ASC")
     fun getAllMovies(): Flow<List<MovieEntity>>
 
     @Query("SELECT * FROM movies WHERE inTrash = 1 ORDER BY id DESC")
@@ -101,6 +101,12 @@ interface MovieDao {
 
     @Query("UPDATE movies SET collection = :collection WHERE id = :id")
     suspend fun moveMovie(id: Int, collection: String)
+
+    @Query("UPDATE movies SET pinned = :pinned WHERE id = :id")
+    suspend fun setPinned(id: Int, pinned: Boolean)
+
+    @Query("UPDATE movies SET customOrder = :customOrder WHERE id = :id")
+    suspend fun setCustomOrder(id: Int, customOrder: Int)
 
     @Query("""
         UPDATE movies

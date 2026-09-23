@@ -29,5 +29,9 @@ data class MovieEntity(
 
     val inTrash: Boolean = false,
 
-    val notes: String? = null
+    val notes: String? = null,
+
+    val pinned: Boolean = false,
+
+    val customOrder: Int = 0
 )
