@@ -54,16 +54,14 @@ android {
 
         getByName("release") {
             signingConfig = signingConfigs.getByName("clof")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
-
-//    buildTypes {
-//        release {
-//            optimization {
-//                enable = false
-//            }
-//        }
-//    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
