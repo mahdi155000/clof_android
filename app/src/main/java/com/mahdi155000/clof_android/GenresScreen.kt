@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +36,8 @@ fun GenresScreen(
     var editingGenre by remember { mutableStateOf<String?>(null) }
     var editedName by remember { mutableStateOf("") }
     var message by remember { mutableStateOf<String?>(null) }
+    var genreToRemove by remember { mutableStateOf<String?>(null) }
+    val movies by movieViewModel.movies.collectAsState()
 
     Column(
         modifier = Modifier
@@ -136,23 +139,58 @@ fun GenresScreen(
                                 Text("Rename")
                             }
                             Button(
-                                onClick = {
-                                    movieViewModel.removeGenre(genre) { removed ->
-                                        message = if (removed) {
-                                            "Genre removed from the list and its movies."
-                                        } else {
-                                            "Genre could not be removed."
-                                        }
-                                    }
-                                }
+                                onClick = { genreToRemove = genre }
                             ) {
                                 Text("Remove")
                             }
                         }
+
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
             }
+        }
+
+        genreToRemove?.let { genre ->
+            val affectedMovies = movies.filter { movie ->
+                genre in movie.genre.split(",").map { it.trim() }
+            }
+            AlertDialog(
+                onDismissRequest = { genreToRemove = null },
+                title = { Text("Remove genre?") },
+                text = {
+                    Text(
+                        if (affectedMovies.isEmpty()) {
+                            "No movies or series use \"$genre\"."
+                        } else {
+                            val titles = affectedMovies.joinToString("\n") { "• ${it.title}" }
+                            "The genre \"$genre\" will be removed from " +
+                                "${affectedMovies.size} movie(s)/series:\n\n$titles"
+                        }
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            genreToRemove = null
+                            movieViewModel.removeGenre(genre) { removed ->
+                                message = if (removed) {
+                                    "Genre removed from the list and its movies."
+                                } else {
+                                    "Genre could not be removed."
+                                }
+                            }
+                        }
+                    ) {
+                        Text("Remove")
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = { genreToRemove = null }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }

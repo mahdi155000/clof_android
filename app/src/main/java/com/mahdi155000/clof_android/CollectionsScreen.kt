@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +39,8 @@ fun CollectionsScreen(
     var editingCollection by remember { mutableStateOf<String?>(null) }
     var editedName by remember { mutableStateOf("") }
     var message by remember { mutableStateOf<String?>(null) }
+    var collectionToRemove by remember { mutableStateOf<String?>(null) }
+    val movies by movieViewModel.movies.collectAsState()
 
     Column(
         modifier = Modifier
@@ -155,25 +158,60 @@ fun CollectionsScreen(
                             item {
                                 Button(
                                     onClick = {
-                                        movieViewModel.removeCollection(collection) { removed ->
-                                            message = if (removed) {
-                                                onCollectionRemoved(collection)
-                                                "Collection removed; its movies moved to ${CollectionNames.MAIN}."
-                                            } else {
-                                                "Reserved collections cannot be removed."
-                                            }
-                                        }
+                                        collectionToRemove = collection
                                     },
                                     enabled = !CollectionNames.isReserved(collection)
                                 ) {
                                     Text("Remove")
                                 }
                             }
+
                         }
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
             }
+        }
+
+        collectionToRemove?.let { collection ->
+            val affectedMovies = movies.filter { it.collection == collection }
+            AlertDialog(
+                onDismissRequest = { collectionToRemove = null },
+                title = { Text("Remove collection?") },
+                text = {
+                    Text(
+                        if (affectedMovies.isEmpty()) {
+                            "No movies or series are in \"$collection\"."
+                        } else {
+                            val titles = affectedMovies.joinToString("\n") { "• ${it.title}" }
+                            "The ${affectedMovies.size} movie(s)/series in \"$collection\" " +
+                                "will be moved to \"${CollectionNames.MAIN}\":\n\n$titles"
+                        }
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            collectionToRemove = null
+                            movieViewModel.removeCollection(collection) { removed ->
+                                message = if (removed) {
+                                    onCollectionRemoved(collection)
+                                    "Collection removed; its movies moved to ${CollectionNames.MAIN}."
+                                } else {
+                                    "Reserved collections cannot be removed."
+                                }
+                            }
+                        }
+                    ) {
+                        Text("Remove")
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = { collectionToRemove = null }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }

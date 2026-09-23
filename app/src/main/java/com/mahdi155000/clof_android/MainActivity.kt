@@ -110,6 +110,7 @@ fun ClofApp(
     var showMoveMoviesScreen by remember { mutableStateOf(false) }
     var showGenresScreen by remember { mutableStateOf(false) }
     var showTrashScreen by remember { mutableStateOf(false) }
+    var showSettingsScreen by remember { mutableStateOf(false) }
     var movieToDelete by remember { mutableStateOf<MovieEntity?>(null) }
 
     var isImporting by remember { mutableStateOf(false) }
@@ -158,10 +159,21 @@ fun ClofApp(
     val openDrawer: () -> Unit = { drawerScope.launch { drawerState.open() } }
     val closeDrawer: () -> Unit = { drawerScope.launch { drawerState.close() } }
     val collections by movieViewModel.collections.collectAsState()
+    val movies by movieViewModel.movies.collectAsState()
     var selectedCollection by remember {
         mutableStateOf<String?>(CollectionNames.MAIN)
     }
     var collectionsExpanded by remember { mutableStateOf(true) }
+
+    fun collectionSummary(collectionName: String?): String {
+        val matchingMovies = if (collectionName == null) {
+            movies
+        } else {
+            movies.filter { it.collection == collectionName }
+        }
+        val watched = matchingMovies.count { it.watched }
+        return "${matchingMovies.size} (${watched} watched, ${matchingMovies.size - watched} unwatched)"
+    }
 
     val onImport = {
         if (!isImporting && !isExporting) {
@@ -191,13 +203,14 @@ fun ClofApp(
         enabled = showAddMovieScreen || movieBeingViewed != null ||
             movieBeingEdited != null || showCollectionsScreen ||
             showMoveMoviesScreen || showGenresScreen || showTrashScreen ||
-            selectedCollection != null
+                showSettingsScreen || selectedCollection != null
     ) {
         when {
             showCollectionsScreen -> showCollectionsScreen = false
             showMoveMoviesScreen -> showMoveMoviesScreen = false
             showGenresScreen -> showGenresScreen = false
             showTrashScreen -> showTrashScreen = false
+            showSettingsScreen -> showSettingsScreen = false
             movieBeingViewed != null -> movieBeingViewed = null
             movieBeingEdited != null -> movieBeingEdited = null
             showAddMovieScreen -> showAddMovieScreen = false
@@ -216,13 +229,12 @@ fun ClofApp(
                 )
 
                 NavigationDrawerItem(
-                    label = { Text("All collections") },
+                    label = { Text("All collections (${collectionSummary(null)})") },
                     selected = selectedCollection == null &&
                         !showCollectionsScreen &&
                         !showMoveMoviesScreen,
                     onClick = {
                         selectedCollection = null
-                        collectionsExpanded = !collectionsExpanded
                         showAddMovieScreen = false
                         movieBeingViewed = null
                         movieBeingEdited = null
@@ -230,13 +242,17 @@ fun ClofApp(
                         showMoveMoviesScreen = false
                         showGenresScreen = false
                         showTrashScreen = false
+                        showSettingsScreen = false
+                        closeDrawer()
                     }
                 )
 
                 if (collectionsExpanded) {
                     collections.forEach { collection ->
                         NavigationDrawerItem(
-                            label = { Text("  $collection") },
+                            label = {
+                                Text("  $collection (${collectionSummary(collection)})")
+                            },
                             selected = selectedCollection == collection &&
                                 !showCollectionsScreen &&
                                 !showMoveMoviesScreen,
@@ -249,6 +265,7 @@ fun ClofApp(
                                 showMoveMoviesScreen = false
                                 showGenresScreen = false
                                 showTrashScreen = false
+                                showSettingsScreen = false
                                 closeDrawer()
                             }
                         )
@@ -266,6 +283,7 @@ fun ClofApp(
                         showMoveMoviesScreen = false
                         showGenresScreen = false
                         showTrashScreen = false
+                        showSettingsScreen = false
                         closeDrawer()
                     }
                 )
@@ -281,6 +299,7 @@ fun ClofApp(
                         showCollectionsScreen = false
                         showGenresScreen = false
                         showTrashScreen = false
+                        showSettingsScreen = false
                         closeDrawer()
                     }
                 )
@@ -312,12 +331,58 @@ fun ClofApp(
                         showGenresScreen = false
                         showCollectionsScreen = false
                         showMoveMoviesScreen = false
+                        showSettingsScreen = false
+                        closeDrawer()
+                    }
+                )
+
+                NavigationDrawerItem(
+                    label = { Text("Settings") },
+                    selected = showSettingsScreen,
+                    onClick = {
+                        showAddMovieScreen = false
+                        movieBeingViewed = null
+                        movieBeingEdited = null
+                        selectedCollection = null
+                        showSettingsScreen = true
+                        showTrashScreen = false
+                        showGenresScreen = false
+                        showCollectionsScreen = false
+                        showMoveMoviesScreen = false
                         closeDrawer()
                     }
                 )
             }
         }
     ) {
+        if (showSettingsScreen) {
+            Scaffold(
+                topBar = {
+                    ClofTopBar(
+                        darkMode = darkMode,
+                        onDarkModeChange = onDarkModeChange,
+                        onImport = onImport,
+                        isImporting = isImporting,
+                        onExport = onExport,
+                        isExporting = isExporting,
+                        onManageCollections = {},
+                        onOpenDrawer = openDrawer
+                    )
+                }
+            ) { innerPadding ->
+                SettingsScreen(
+                    darkMode = darkMode,
+                    onDarkModeChange = onDarkModeChange,
+                    onImport = onImport,
+                    isImporting = isImporting,
+                    onExport = onExport,
+                    isExporting = isExporting,
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
+            return@ModalNavigationDrawer
+        }
+
         if (showCollectionsScreen) {
             Scaffold(
                 topBar = {
@@ -572,8 +637,6 @@ fun ClofApp(
             return@ModalNavigationDrawer
         }
 
-        val movies by movieViewModel.movies.collectAsState()
-
         movieToDelete?.let { movie ->
             AlertDialog(
                 onDismissRequest = { movieToDelete = null },
@@ -661,33 +724,7 @@ fun ClofTopBar(
                 Text("☰")
             }
         },
-        actions = {
-            Button(
-                onClick = onImport,
-                enabled = !isImporting && !isExporting
-            ) {
-                Text(if (isImporting) "Importing" else "Import")
-            }
-            Button(
-                onClick = onExport,
-                enabled = !isImporting && !isExporting
-            ) {
-                Text(if (isExporting) "Exporting" else "Export")
-            }
-            Button(onClick = onManageCollections) {
-                Text("Collections")
-            }
-            Row(
-                modifier = Modifier.padding(end = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Dark")
-                Switch(
-                    checked = darkMode,
-                    onCheckedChange = onDarkModeChange
-                )
-            }
-        }
+        actions = {}
     )
 }
 
