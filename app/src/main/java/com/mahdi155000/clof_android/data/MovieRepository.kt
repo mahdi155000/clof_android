@@ -69,6 +69,14 @@ class MovieRepository(
         movieDao.setCustomOrder(id, customOrder)
     }
 
+    suspend fun setPersonalRating(id: Int, rating: Int?) {
+        movieDao.setPersonalRating(id, rating)
+    }
+
+    suspend fun setFavorite(id: Int, favorite: Boolean) {
+        movieDao.setFavorite(id, favorite)
+    }
+
     suspend fun nextEpisode(id: Int) {
         movieDao.nextEpisode(id)
     }

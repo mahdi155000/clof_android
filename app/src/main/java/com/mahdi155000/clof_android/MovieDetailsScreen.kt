@@ -123,6 +123,42 @@ fun MovieDetailsScreen(
             modifier = Modifier.height(8.dp)
         )
 
+        Text(
+            text = "Rating: ${currentMovie.personalRating?.let { "$it/5" } ?: "Not rated"}",
+            style = MaterialTheme.typography.bodyLarge
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = {
+                movieViewModel.setFavorite(currentMovie, !currentMovie.favorite)
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(if (currentMovie.favorite) "Remove Favorite" else "Mark as Favorite")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = {
+                movieViewModel.setPersonalRating(
+                    currentMovie,
+                    if (currentMovie.personalRating == null) 5 else null
+                )
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                if (currentMovie.personalRating == null) {
+                    "Rate 5/5"
+                } else {
+                    "Clear Rating"
+                }
+            )
+        }
+
         if (currentMovie.isSeries) {
             Text(
                 text = if (currentMovie.watched) {

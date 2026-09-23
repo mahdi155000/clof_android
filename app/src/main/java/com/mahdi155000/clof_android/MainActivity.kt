@@ -788,6 +788,8 @@ fun MovieList(
     var watchedFilter by remember {
         mutableStateOf("All")
     }
+    var favoriteFilter by remember { mutableStateOf("All") }
+    var ratingFilter by remember { mutableStateOf("All") }
 
     var collectionFilter by remember {
         mutableStateOf("All")
@@ -843,6 +845,14 @@ fun MovieList(
                 else -> true
             }
 
+            val matchesFavorite = favoriteFilter == "All" ||
+                (favoriteFilter == "Favorites" && movie.favorite)
+            val matchesRating = when (ratingFilter) {
+                "Rated" -> movie.personalRating != null
+                "Unrated" -> movie.personalRating == null
+                else -> true
+            }
+
             val matchesCollection =
                 (selectedCollection == null || movie.collection == selectedCollection) &&
                         (collectionFilter == "All" ||
@@ -852,6 +862,8 @@ fun MovieList(
             matchesSearch &&
                     matchesType &&
                     matchesWatched &&
+                    matchesFavorite &&
+                    matchesRating &&
                     matchesCollection
         }
         .let { list ->
@@ -881,6 +893,16 @@ fun MovieList(
 
                 "Watched First" -> list.sortedWith(
                     compareByDescending<MovieEntity> { it.watched }
+                        .thenBy { it.title.lowercase() }
+                )
+
+                "Favorites First" -> list.sortedWith(
+                    compareByDescending<MovieEntity> { it.favorite }
+                        .thenBy { it.title.lowercase() }
+                )
+
+                "Highest Rated" -> list.sortedWith(
+                    compareByDescending<MovieEntity> { it.personalRating ?: 0 }
                         .thenBy { it.title.lowercase() }
                 )
 
@@ -1042,6 +1064,48 @@ fun MovieList(
                 )
             )
 
+            Text(
+                    text = "Favorites",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(start = 12.dp, top = 12.dp)
+                )
+            LazyRow(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item {
+                        FilterButton("All", favoriteFilter == "All") { favoriteFilter = "All" }
+                    }
+                    item {
+                        FilterButton(
+                            "Favorites",
+                            favoriteFilter == "Favorites"
+                        ) { favoriteFilter = "Favorites" }
+                    }
+                }
+
+            Text(
+                    text = "Rating",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(start = 12.dp, top = 12.dp)
+                )
+            LazyRow(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item {
+                        FilterButton("All", ratingFilter == "All") { ratingFilter = "All" }
+                    }
+                    item {
+                        FilterButton("Rated", ratingFilter == "Rated") { ratingFilter = "Rated" }
+                    }
+                    item {
+                        FilterButton("Unrated", ratingFilter == "Unrated") {
+                            ratingFilter = "Unrated"
+                        }
+                    }
+                }
+
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1159,6 +1223,22 @@ fun MovieList(
                         selected = sortOption == "Series Progress"
                     ) {
                         sortOption = "Series Progress"
+                    }
+                }
+                item {
+                    FilterButton(
+                        text = "Favorites",
+                        selected = sortOption == "Favorites First"
+                    ) {
+                        sortOption = "Favorites First"
+                    }
+                }
+                item {
+                    FilterButton(
+                        text = "Rating",
+                        selected = sortOption == "Highest Rated"
+                    ) {
+                        sortOption = "Highest Rated"
                     }
                 }
             }

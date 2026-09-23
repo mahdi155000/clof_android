@@ -108,6 +108,12 @@ interface MovieDao {
     @Query("UPDATE movies SET customOrder = :customOrder WHERE id = :id")
     suspend fun setCustomOrder(id: Int, customOrder: Int)
 
+    @Query("UPDATE movies SET personalRating = :rating WHERE id = :id")
+    suspend fun setPersonalRating(id: Int, rating: Int?)
+
+    @Query("UPDATE movies SET favorite = :favorite WHERE id = :id")
+    suspend fun setFavorite(id: Int, favorite: Boolean)
+
     @Query("""
         UPDATE movies
         SET episode = CASE

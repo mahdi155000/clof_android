@@ -44,6 +44,8 @@ fun AddMovieScreen(
     var season by rememberSaveable { mutableStateOf("1") }
     var episode by rememberSaveable { mutableStateOf("1") }
     var notes by rememberSaveable { mutableStateOf("") }
+    var rating by rememberSaveable { mutableStateOf("") }
+    var favorite by rememberSaveable { mutableStateOf(false) }
     var seasonError by remember { mutableStateOf<String?>(null) }
     var episodeError by remember { mutableStateOf<String?>(null) }
     var isSaving by remember { mutableStateOf(false) }
@@ -155,6 +157,35 @@ fun AddMovieScreen(
             enabled = !isSaving
         )
 
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = rating,
+            onValueChange = { value ->
+                if (value.isEmpty() || value.toIntOrNull()?.let { it in 1..5 } == true) {
+                    rating = value
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Personal rating (1-5, optional)") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            enabled = !isSaving
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("Favorite")
+            Switch(
+                checked = favorite,
+                onCheckedChange = { favorite = it },
+                enabled = !isSaving
+            )
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
 
         saveError?.let { message ->
@@ -199,6 +230,8 @@ fun AddMovieScreen(
                     season = parsedSeason ?: 0,
                     episode = parsedEpisode ?: 0,
                     notes = notes,
+                    personalRating = rating.toIntOrNull(),
+                    favorite = favorite,
                     onComplete = {
                         isSaving = false
                         onMovieAdded()

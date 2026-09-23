@@ -86,6 +86,8 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         episode: Int = 0,
         collection: String = CollectionNames.MAIN,
         notes: String? = null,
+        personalRating: Int? = null,
+        favorite: Boolean = false,
         onComplete: () -> Unit = {},
         onDuplicate: () -> Unit = {},
         onError: (Throwable) -> Unit = {}
@@ -100,7 +102,9 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
                         season = season,
                         episode = episode,
                         collection = collection,
-                        notes = notes?.trim()?.ifBlank { null }
+                        notes = notes?.trim()?.ifBlank { null },
+                        personalRating = personalRating?.coerceIn(1, 5),
+                        favorite = favorite
                     )
                 )
 
@@ -194,6 +198,18 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
     fun setCustomOrder(movie: MovieEntity, customOrder: Int) {
         viewModelScope.launch {
             repository.setCustomOrder(movie.id, customOrder)
+        }
+    }
+
+    fun setPersonalRating(movie: MovieEntity, rating: Int?) {
+        viewModelScope.launch {
+            repository.setPersonalRating(movie.id, rating?.coerceIn(1, 5))
+        }
+    }
+
+    fun setFavorite(movie: MovieEntity, favorite: Boolean) {
+        viewModelScope.launch {
+            repository.setFavorite(movie.id, favorite)
         }
     }
 

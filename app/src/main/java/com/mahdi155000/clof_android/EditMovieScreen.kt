@@ -48,6 +48,10 @@ fun EditMovieScreen(
     var season by rememberSaveable(movie.id) { mutableStateOf(movie.season.toString()) }
     var episode by rememberSaveable(movie.id) { mutableStateOf(movie.episode.toString()) }
     var notes by rememberSaveable(movie.id) { mutableStateOf(movie.notes.orEmpty()) }
+    var rating by rememberSaveable(movie.id) {
+        mutableStateOf(movie.personalRating?.toString().orEmpty())
+    }
+    var favorite by rememberSaveable(movie.id) { mutableStateOf(movie.favorite) }
     var seasonError by remember { mutableStateOf<String?>(null) }
     var episodeError by remember { mutableStateOf<String?>(null) }
     var isSaving by remember { mutableStateOf(false) }
@@ -158,6 +162,35 @@ fun EditMovieScreen(
             enabled = !isSaving
         )
 
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = rating,
+            onValueChange = { value ->
+                if (value.isEmpty() || value.toIntOrNull()?.let { it in 1..5 } == true) {
+                    rating = value
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Personal rating (1-5, optional)") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            enabled = !isSaving
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("Favorite")
+            Switch(
+                checked = favorite,
+                onCheckedChange = { favorite = it },
+                enabled = !isSaving
+            )
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
 
         saveError?.let { message ->
@@ -202,6 +235,8 @@ fun EditMovieScreen(
                     season = season,
                     episode = episode,
                     notes = notes
+                    , personalRating = rating.toIntOrNull()
+                    , favorite = favorite
                 )
 
                 movieViewModel.updateMovie(

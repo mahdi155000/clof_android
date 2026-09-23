@@ -33,5 +33,9 @@ data class MovieEntity(
 
     val pinned: Boolean = false,
 
-    val customOrder: Int = 0
+    val customOrder: Int = 0,
+
+    val personalRating: Int? = null,
+
+    val favorite: Boolean = false
 )
