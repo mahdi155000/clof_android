@@ -22,6 +22,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,12 +37,12 @@ fun AddMovieScreen(
     movieViewModel: MovieViewModel,
     onMovieAdded: () -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-    var genresForMovie by remember { mutableStateOf<List<String>>(emptyList()) }
-    var collection by remember { mutableStateOf(CollectionNames.MAIN) }
-    var isSeries by remember { mutableStateOf(false) }
-    var season by remember { mutableStateOf("1") }
-    var episode by remember { mutableStateOf("1") }
+    var title by rememberSaveable { mutableStateOf("") }
+    var genresForMovie by rememberSaveable { mutableStateOf<List<String>>(emptyList()) }
+    var collection by rememberSaveable { mutableStateOf(CollectionNames.MAIN) }
+    var isSeries by rememberSaveable { mutableStateOf(false) }
+    var season by rememberSaveable { mutableStateOf("1") }
+    var episode by rememberSaveable { mutableStateOf("1") }
     var seasonError by remember { mutableStateOf<String?>(null) }
     var episodeError by remember { mutableStateOf<String?>(null) }
     var isSaving by remember { mutableStateOf(false) }

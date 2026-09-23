@@ -22,6 +22,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,14 +39,14 @@ fun EditMovieScreen(
     movieViewModel: MovieViewModel,
     onMovieUpdated: () -> Unit
 ) {
-    var title by remember { mutableStateOf(movie.title) }
-    var genresForMovie by remember {
+    var title by rememberSaveable(movie.id) { mutableStateOf(movie.title) }
+    var genresForMovie by rememberSaveable(movie.id) {
         mutableStateOf(movie.genre.split(",").map { it.trim() }.filter { it.isNotBlank() })
     }
-    var collection by remember { mutableStateOf(movie.collection) }
-    var isSeries by remember { mutableStateOf(movie.isSeries) }
-    var season by remember { mutableStateOf(movie.season.toString()) }
-    var episode by remember { mutableStateOf(movie.episode.toString()) }
+    var collection by rememberSaveable(movie.id) { mutableStateOf(movie.collection) }
+    var isSeries by rememberSaveable(movie.id) { mutableStateOf(movie.isSeries) }
+    var season by rememberSaveable(movie.id) { mutableStateOf(movie.season.toString()) }
+    var episode by rememberSaveable(movie.id) { mutableStateOf(movie.episode.toString()) }
     var seasonError by remember { mutableStateOf<String?>(null) }
     var episodeError by remember { mutableStateOf<String?>(null) }
     var isSaving by remember { mutableStateOf(false) }
