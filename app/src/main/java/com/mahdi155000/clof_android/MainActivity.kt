@@ -866,6 +866,28 @@ fun MovieList(
                     it.createdAt
                 }
 
+                "Collection A-Z" -> list.sortedWith(
+                    compareBy<MovieEntity> { it.collection.lowercase() }
+                        .thenBy { it.title.lowercase() }
+                )
+
+                "Genre A-Z" -> list.sortedWith(
+                    compareBy<MovieEntity> { it.genre.lowercase() }
+                        .thenBy { it.title.lowercase() }
+                )
+
+                "Watched First" -> list.sortedWith(
+                    compareByDescending<MovieEntity> { it.watched }
+                        .thenBy { it.title.lowercase() }
+                )
+
+                "Series Progress" -> list.sortedWith(
+                    compareBy<MovieEntity> { !it.isSeries }
+                        .thenBy { if (it.isSeries) it.season else 0 }
+                        .thenBy { if (it.isSeries) it.episode else 0 }
+                        .thenBy { it.title.lowercase() }
+                )
+
                 else -> list.sortedByDescending {
                     it.createdAt
                 }
@@ -1078,6 +1100,38 @@ fun MovieList(
                         selected = sortOption == "Title Z-A"
                     ) {
                         sortOption = "Title Z-A"
+                    }
+                }
+                item {
+                    FilterButton(
+                        text = "Collection",
+                        selected = sortOption == "Collection A-Z"
+                    ) {
+                        sortOption = "Collection A-Z"
+                    }
+                }
+                item {
+                    FilterButton(
+                        text = "Genre",
+                        selected = sortOption == "Genre A-Z"
+                    ) {
+                        sortOption = "Genre A-Z"
+                    }
+                }
+                item {
+                    FilterButton(
+                        text = "Watched",
+                        selected = sortOption == "Watched First"
+                    ) {
+                        sortOption = "Watched First"
+                    }
+                }
+                item {
+                    FilterButton(
+                        text = "Progress",
+                        selected = sortOption == "Series Progress"
+                    ) {
+                        sortOption = "Series Progress"
                     }
                 }
             }
