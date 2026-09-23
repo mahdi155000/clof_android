@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mahdi155000.clof_android.data.AppDatabase
 import com.mahdi155000.clof_android.data.ClofDatabaseImporter
+import com.mahdi155000.clof_android.data.ClofDatabaseExporter
 import com.mahdi155000.clof_android.data.CollectionRepository
 import com.mahdi155000.clof_android.data.CollectionNames
 import com.mahdi155000.clof_android.data.ImportResult
@@ -43,6 +44,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         collectionRepository,
         genreRepository
     )
+    private val databaseExporter = ClofDatabaseExporter(application, database)
 
     val collections: StateFlow<List<String>> =
         collectionRepository.collections.stateIn(
@@ -188,6 +190,19 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             runCatching {
                 databaseImporter.importFrom(uri)
             }.onSuccess(onComplete)
+                .onFailure(onError)
+        }
+    }
+
+    fun exportClofDatabase(
+        uri: android.net.Uri,
+        onComplete: () -> Unit,
+        onError: (Throwable) -> Unit
+    ) {
+        viewModelScope.launch {
+            runCatching {
+                databaseExporter.exportTo(uri)
+            }.onSuccess { onComplete() }
                 .onFailure(onError)
         }
     }

@@ -113,6 +113,7 @@ fun ClofApp(
     var movieToDelete by remember { mutableStateOf<MovieEntity?>(null) }
 
     var isImporting by remember { mutableStateOf(false) }
+    var isExporting by remember { mutableStateOf(false) }
     var importMessage by remember { mutableStateOf<String?>(null) }
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -133,6 +134,24 @@ fun ClofApp(
             )
         }
     }
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/octet-stream")
+    ) { uri ->
+        if (uri != null) {
+            isExporting = true
+            movieViewModel.exportClofDatabase(
+                uri = uri,
+                onComplete = {
+                    isExporting = false
+                    importMessage = "Database exported successfully."
+                },
+                onError = { error ->
+                    isExporting = false
+                    importMessage = "Export failed: ${error.message ?: "unable to write database"}"
+                }
+            )
+        }
+    }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val drawerScope = rememberCoroutineScope()
@@ -145,8 +164,13 @@ fun ClofApp(
     var collectionsExpanded by remember { mutableStateOf(true) }
 
     val onImport = {
-        if (!isImporting) {
+        if (!isImporting && !isExporting) {
             importLauncher.launch(arrayOf("*/*"))
+        }
+    }
+    val onExport = {
+        if (!isImporting && !isExporting) {
+            exportLauncher.launch("clof-export.db")
         }
     }
 
@@ -302,6 +326,8 @@ fun ClofApp(
                         onDarkModeChange = onDarkModeChange,
                         onImport = onImport,
                         isImporting = isImporting,
+                        onExport = onExport,
+                        isExporting = isExporting,
                         onManageCollections = { showCollectionsScreen = true },
                         onOpenDrawer = openDrawer
                     )
@@ -343,6 +369,8 @@ fun ClofApp(
                         onDarkModeChange = onDarkModeChange,
                         onImport = onImport,
                         isImporting = isImporting,
+                        onExport = onExport,
+                        isExporting = isExporting,
                         onManageCollections = { showCollectionsScreen = true },
                         onOpenDrawer = openDrawer
                     )
@@ -370,6 +398,8 @@ fun ClofApp(
                         onDarkModeChange = onDarkModeChange,
                         onImport = onImport,
                         isImporting = isImporting,
+                        onExport = onExport,
+                        isExporting = isExporting,
                         onManageCollections = { showCollectionsScreen = true },
                         onOpenDrawer = openDrawer
                     )
@@ -399,6 +429,8 @@ fun ClofApp(
                         onDarkModeChange = onDarkModeChange,
                         onImport = onImport,
                         isImporting = isImporting,
+                        onExport = onExport,
+                        isExporting = isExporting,
                         onManageCollections = { showCollectionsScreen = true },
                         onOpenDrawer = openDrawer
                     )
@@ -436,6 +468,8 @@ fun ClofApp(
                         onDarkModeChange = onDarkModeChange,
                         onImport = onImport,
                         isImporting = isImporting,
+                        onExport = onExport,
+                        isExporting = isExporting,
                         onManageCollections = { showCollectionsScreen = true },
                         onOpenDrawer = openDrawer
                     )
@@ -476,6 +510,8 @@ fun ClofApp(
                         onDarkModeChange = onDarkModeChange,
                         onImport = onImport,
                         isImporting = isImporting,
+                        onExport = onExport,
+                        isExporting = isExporting,
                         onManageCollections = { showCollectionsScreen = true },
                         onOpenDrawer = openDrawer
                     )
@@ -515,6 +551,8 @@ fun ClofApp(
                         onDarkModeChange = onDarkModeChange,
                         onImport = onImport,
                         isImporting = isImporting,
+                        onExport = onExport,
+                        isExporting = isExporting,
                         onManageCollections = { showCollectionsScreen = true },
                         onOpenDrawer = openDrawer
                     )
@@ -566,6 +604,8 @@ fun ClofApp(
                     onDarkModeChange = onDarkModeChange,
                     onImport = onImport,
                     isImporting = isImporting,
+                    onExport = onExport,
+                    isExporting = isExporting,
                     onManageCollections = { showCollectionsScreen = true },
                     onOpenDrawer = openDrawer
                 )
@@ -607,6 +647,8 @@ fun ClofTopBar(
     onDarkModeChange: (Boolean) -> Unit,
     onImport: () -> Unit,
     isImporting: Boolean,
+    onExport: () -> Unit,
+    isExporting: Boolean,
     onManageCollections: () -> Unit,
     onOpenDrawer: () -> Unit
 ) {
@@ -622,9 +664,15 @@ fun ClofTopBar(
         actions = {
             Button(
                 onClick = onImport,
-                enabled = !isImporting
+                enabled = !isImporting && !isExporting
             ) {
                 Text(if (isImporting) "Importing" else "Import")
+            }
+            Button(
+                onClick = onExport,
+                enabled = !isImporting && !isExporting
+            ) {
+                Text(if (isExporting) "Exporting" else "Export")
             }
             Button(onClick = onManageCollections) {
                 Text("Collections")
