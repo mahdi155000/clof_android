@@ -1108,6 +1108,15 @@ fun MovieItem(
                     },
                     style = MaterialTheme.typography.bodyMedium
                 )
+            } else {
+                Text(
+                    text = if (movie.watched) {
+                        "Completed"
+                    } else {
+                        "In progress"
+                    },
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
 
             Spacer(
@@ -1141,6 +1150,22 @@ fun MovieItem(
                             "Watched"
                         }
                     )
+                }
+
+                if (movie.isSeries) {
+                    Button(
+                        onClick = {
+                            movieViewModel.setWatched(movie, !movie.watched)
+                        }
+                    ) {
+                        Text(
+                            if (movie.watched) {
+                                "Reopen Series"
+                            } else {
+                                "Complete Series"
+                            }
+                        )
+                    }
                 }
 
                 if (movie.watched &&

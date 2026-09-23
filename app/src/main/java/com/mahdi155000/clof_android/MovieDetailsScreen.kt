@@ -115,6 +115,17 @@ fun MovieDetailsScreen(
 
         if (currentMovie.isSeries) {
             Text(
+                text = if (currentMovie.watched) {
+                    "Status: Completed"
+                } else {
+                    "Status: In progress"
+                },
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
                 text = "Season: ${currentMovie.season}",
                 style = MaterialTheme.typography.bodyLarge
             )
@@ -163,7 +174,24 @@ fun MovieDetailsScreen(
                 onClick = { movieViewModel.nextSeason(currentMovie) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Next Season")
+                Text("Next Season (Episode 1)")
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = {
+                    movieViewModel.setWatched(currentMovie, !currentMovie.watched)
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    if (currentMovie.watched) {
+                        "Mark Series In Progress"
+                    } else {
+                        "Mark Series Completed"
+                    }
+                )
             }
         } else {
             Text(

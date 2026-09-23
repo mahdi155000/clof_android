@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [MovieEntity::class, CollectionEntity::class, GenreEntity::class],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -35,7 +35,8 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_2_3,
                     MIGRATION_3_4,
                     MIGRATION_4_5,
-                    MIGRATION_5_6
+                    MIGRATION_5_6,
+                    MIGRATION_6_7
                 )
                     .addCallback(object : Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
@@ -156,6 +157,26 @@ abstract class AppDatabase : RoomDatabase() {
                         (SELECT MAX(id) FROM movies) - id
                     ) * 1000
                     WHERE createdAt = 0
+                    """.trimIndent()
+                )
+            }
+        }
+
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    UPDATE movies
+                    SET season = CASE
+                            WHEN isSeries = 1 AND season > 0 THEN season
+                            WHEN isSeries = 1 THEN 1
+                            ELSE 0
+                        END,
+                        episode = CASE
+                            WHEN isSeries = 1 AND episode > 0 THEN episode
+                            WHEN isSeries = 1 THEN 1
+                            ELSE 0
+                        END
                     """.trimIndent()
                 )
             }

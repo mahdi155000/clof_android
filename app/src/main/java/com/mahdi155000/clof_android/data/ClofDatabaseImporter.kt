@@ -79,8 +79,10 @@ class ClofDatabaseImporter(
                         createdAt = cursor.longAt(createdAtColumn),
                         genre = cursor.stringAt(genreColumn),
                         isSeries = cursor.intAt(seriesColumn) != 0,
-                        season = cursor.intAt(seasonColumn),
-                        episode = cursor.intAt(episodeColumn),
+                        season = cursor.intAt(seasonColumn).coerceAtLeast(1)
+                            .takeIf { cursor.intAt(seriesColumn) != 0 } ?: 0,
+                        episode = cursor.intAt(episodeColumn).coerceAtLeast(1)
+                            .takeIf { cursor.intAt(seriesColumn) != 0 } ?: 0,
                         watched = cursor.intAt(watchedColumn) != 0,
                         collection = cursor.stringAt(collectionColumn)
                             .ifBlank { CollectionNames.MAIN }
