@@ -743,9 +743,17 @@ fun MovieList(
 
     val filteredMovies = movies
         .filter { movie ->
-            val matchesSearch =
-                movie.title.contains(searchText, ignoreCase = true) ||
-                        movie.genre.contains(searchText, ignoreCase = true)
+            val matchesSearch = listOf(
+                movie.title,
+                movie.genre,
+                movie.collection,
+                if (movie.isSeries) "season ${movie.season}" else "",
+                if (movie.isSeries) "episode ${movie.episode}" else "",
+                if (movie.isSeries) movie.season.toString() else "",
+                if (movie.isSeries) movie.episode.toString() else ""
+            ).any { field ->
+                field.contains(searchText, ignoreCase = true)
+            }
 
             val matchesType = when (typeFilter) {
                 "Movies" -> !movie.isSeries
