@@ -37,6 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mahdi155000.clof_android.data.CollectionNames
@@ -141,19 +142,23 @@ fun ClofApp(
         }
     }
 
-    fun collectionSummary(collectionName: String?): String {
-        val matchingMovies = if (collectionName == null) {
-            movies
-        } else {
-            movies.filter { it.collection == collectionName }
+    val collectionSummaries = remember(movies) {
+        val summaries = movies.groupBy { it.collection }.mapValues { (_, collectionMovies) ->
+            val watched = collectionMovies.count { it.watched }
+            collectionMovies.size to watched
         }
-        val watched = matchingMovies.count { it.watched }
+        val watched = movies.count { it.watched }
+        summaries + (null to (movies.size to watched))
+    }
+
+    fun collectionSummary(collectionName: String?): String {
+        val (total, watched) = collectionSummaries[collectionName] ?: (0 to 0)
         return String.format(
             Locale.getDefault(),
             collectionSummaryFormat,
-            matchingMovies.size,
+            total,
             watched,
-            matchingMovies.size - watched
+            total - watched
         )
     }
 
@@ -206,8 +211,7 @@ fun ClofApp(
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(16.dp)
                 )
-                val currentRoute by navController.currentBackStackEntryFlow
-                    .collectAsState(initial = navController.currentBackStackEntry)
+                val currentRoute by navController.currentBackStackEntryAsState()
                 val currentDestination = currentRoute?.destination
                 val routeCollection = currentRoute?.arguments?.getString("collection")
                     ?.takeUnless { it == "all" }

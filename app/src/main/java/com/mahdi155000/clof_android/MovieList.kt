@@ -9,8 +9,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -49,7 +50,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -101,10 +101,12 @@ fun MovieList(
         mutableStateOf(false)
     }
 
-    val collections = collectionNames
-        .filter { it.isNotBlank() }
-        .distinct()
-        .sorted()
+    val collections = remember(collectionNames) {
+        collectionNames
+            .filter { it.isNotBlank() }
+            .distinct()
+            .sorted()
+    }
 
     LaunchedEffect(selectedCollection) {
         collectionFilter = "All"
@@ -116,110 +118,103 @@ fun MovieList(
         }
     }
 
-    val filteredMovies = movies
-        .filter { movie ->
-            val matchesSearch = listOf(
-                movie.title,
-                movie.genre,
-                movie.collection,
-                if (movie.isSeries) "season ${movie.season}" else "",
-                if (movie.isSeries) "episode ${movie.episode}" else "",
-                if (movie.isSeries) movie.season.toString() else "",
-                if (movie.isSeries) movie.episode.toString() else ""
-            ).any { field ->
-                field.contains(searchText, ignoreCase = true)
-            }
+    val filteredMovies = remember(
+        movies,
+        searchText,
+        typeFilter,
+        watchedFilter,
+        favoriteFilter,
+        ratingFilter,
+        selectedCollection,
+        collectionFilter,
+        sortOption
+    ) {
+        movies
+            .filter { movie ->
+                val matchesSearch = listOf(
+                    movie.title,
+                    movie.genre,
+                    movie.collection,
+                    if (movie.isSeries) "season ${movie.season}" else "",
+                    if (movie.isSeries) "episode ${movie.episode}" else "",
+                    if (movie.isSeries) movie.season.toString() else "",
+                    if (movie.isSeries) movie.episode.toString() else ""
+                ).any { field ->
+                    field.contains(searchText, ignoreCase = true)
+                }
 
-            val matchesType = when (typeFilter) {
-                "Movies" -> !movie.isSeries
-                "Series" -> movie.isSeries
-                else -> true
-            }
+                val matchesType = when (typeFilter) {
+                    "Movies" -> !movie.isSeries
+                    "Series" -> movie.isSeries
+                    else -> true
+                }
 
-            val matchesWatched = when (watchedFilter) {
-                "Watched" -> movie.watched
-                "Unwatched" -> !movie.watched
-                else -> true
-            }
+                val matchesWatched = when (watchedFilter) {
+                    "Watched" -> movie.watched
+                    "Unwatched" -> !movie.watched
+                    else -> true
+                }
 
-            val matchesFavorite = favoriteFilter == "All" ||
-                (favoriteFilter == "Favorites" && movie.favorite)
-            val matchesRating = when (ratingFilter) {
-                "Rated" -> movie.personalRating != null
-                "Unrated" -> movie.personalRating == null
-                else -> true
-            }
+                val matchesFavorite = favoriteFilter == "All" ||
+                    (favoriteFilter == "Favorites" && movie.favorite)
+                val matchesRating = when (ratingFilter) {
+                    "Rated" -> movie.personalRating != null
+                    "Unrated" -> movie.personalRating == null
+                    else -> true
+                }
 
-            val matchesCollection =
-                (selectedCollection == null || movie.collection == selectedCollection) &&
-                        (collectionFilter == "All" ||
-                            movie.collection == collectionFilter
-                        )
+                val matchesCollection =
+                    (selectedCollection == null || movie.collection == selectedCollection) &&
+                        (collectionFilter == "All" || movie.collection == collectionFilter)
 
-            matchesSearch &&
+                matchesSearch &&
                     matchesType &&
                     matchesWatched &&
                     matchesFavorite &&
                     matchesRating &&
                     matchesCollection
-        }
-        .let { list ->
-            val ordered = when (sortOption) {
-                "Custom Order" -> list.sortedBy { it.customOrder }
-                "Title A-Z" -> list.sortedBy {
-                    it.title.lowercase()
-                }
-
-                "Title Z-A" -> list.sortedByDescending {
-                    it.title.lowercase()
-                }
-
-                "Oldest Added" -> list.sortedBy {
-                    it.createdAt
-                }
-
-                "Collection A-Z" -> list.sortedWith(
-                    compareBy<MovieEntity> { it.collection.lowercase() }
-                        .thenBy { it.title.lowercase() }
-                )
-
-                "Genre A-Z" -> list.sortedWith(
-                    compareBy<MovieEntity> { it.genre.lowercase() }
-                        .thenBy { it.title.lowercase() }
-                )
-
-                "Watched First" -> list.sortedWith(
-                    compareByDescending<MovieEntity> { it.watched }
-                        .thenBy { it.title.lowercase() }
-                )
-
-                "Favorites First" -> list.sortedWith(
-                    compareByDescending<MovieEntity> { it.favorite }
-                        .thenBy { it.title.lowercase() }
-                )
-
-                "Highest Rated" -> list.sortedWith(
-                    compareByDescending<MovieEntity> { it.personalRating ?: 0 }
-                        .thenBy { it.title.lowercase() }
-                )
-
-                "Series Progress" -> list.sortedWith(
-                    compareBy<MovieEntity> { !it.isSeries }
-                        .thenBy { if (it.isSeries) it.season else 0 }
-                        .thenBy { if (it.isSeries) it.episode else 0 }
-                        .thenBy { it.title.lowercase() }
-                )
-
-                else -> list.sortedByDescending {
-                    it.createdAt
-                }
             }
-            val sortRanks = ordered.withIndex().associate { it.value.id to it.index }
-            ordered.sortedWith(
-                compareByDescending<MovieEntity> { it.pinned }
-                    .thenBy { sortRanks[it.id] ?: Int.MAX_VALUE }
-            )
-        }
+            .let { list ->
+                val ordered = when (sortOption) {
+                    "Custom Order" -> list.sortedBy { it.customOrder }
+                    "Title A-Z" -> list.sortedBy { it.title.lowercase() }
+                    "Title Z-A" -> list.sortedByDescending { it.title.lowercase() }
+                    "Oldest Added" -> list.sortedBy { it.createdAt }
+                    "Collection A-Z" -> list.sortedWith(
+                        compareBy<MovieEntity> { it.collection.lowercase() }
+                            .thenBy { it.title.lowercase() }
+                    )
+                    "Genre A-Z" -> list.sortedWith(
+                        compareBy<MovieEntity> { it.genre.lowercase() }
+                            .thenBy { it.title.lowercase() }
+                    )
+                    "Watched First" -> list.sortedWith(
+                        compareByDescending<MovieEntity> { it.watched }
+                            .thenBy { it.title.lowercase() }
+                    )
+                    "Favorites First" -> list.sortedWith(
+                        compareByDescending<MovieEntity> { it.favorite }
+                            .thenBy { it.title.lowercase() }
+                    )
+                    "Highest Rated" -> list.sortedWith(
+                        compareByDescending<MovieEntity> { it.personalRating ?: 0 }
+                            .thenBy { it.title.lowercase() }
+                    )
+                    "Series Progress" -> list.sortedWith(
+                        compareBy<MovieEntity> { !it.isSeries }
+                            .thenBy { if (it.isSeries) it.season else 0 }
+                            .thenBy { if (it.isSeries) it.episode else 0 }
+                            .thenBy { it.title.lowercase() }
+                    )
+                    else -> list.sortedByDescending { it.createdAt }
+                }
+                val sortRanks = ordered.withIndex().associate { it.value.id to it.index }
+                ordered.sortedWith(
+                    compareByDescending<MovieEntity> { it.pinned }
+                        .thenBy { sortRanks[it.id] ?: Int.MAX_VALUE }
+                )
+            }
+    }
 
     Column(
         modifier = modifier.fillMaxSize()
@@ -644,6 +639,7 @@ fun FilterButton(
 }
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 fun MovieItem(
     movie: MovieEntity,
     movieViewModel: MovieViewModel,
@@ -657,9 +653,6 @@ fun MovieItem(
     modifier: Modifier = Modifier
 ) {
     Card(
-        onClick = {
-            onMovieClick(movie)
-        },
         modifier = modifier
             .fillMaxWidth()
             .combinedClickable(
@@ -753,11 +746,11 @@ fun MovieItem(
                 modifier = Modifier.height(16.dp)
             )
 
-            Row(
+            FlowRow(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 val markedStatusMessage = stringResource(
                     R.string.marked_status,
