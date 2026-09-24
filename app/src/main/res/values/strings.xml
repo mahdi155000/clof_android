@@ -2,6 +2,8 @@
     <string name="app_name">clof_android</string>
     <string name="clof_title">CLOF</string>
     <string name="menu_icon">☰</string>
+    <string name="more_options">More options</string>
+    <string name="more_icon">⋮</string>
     <string name="add">+</string>
     <string name="selected_item">✓ %1$s</string>
     <string name="genre">Genre</string>
@@ -41,6 +43,8 @@
     <string name="genres_label">Genres: %1$s</string>
     <string name="none">None</string>
     <string name="manage_collections">Manage collections</string>
+    <string name="import_database_menu">Import database</string>
+    <string name="export_database_menu">Export database</string>
     <string name="new_collection">New collection</string>
     <string name="collection_name">Collection name</string>
     <string name="add_collection">Add collection</string>

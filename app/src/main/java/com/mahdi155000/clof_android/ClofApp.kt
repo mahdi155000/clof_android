@@ -295,6 +295,9 @@ fun ClofApp(
                     onExport = onExport,
                     isExporting = isExporting,
                     onOpenDrawer = openDrawer,
+                    onManageCollections = {
+                        navigateFromDrawer(ClofRoutes.COLLECTIONS)
+                    },
                     snackbarHostState = snackbarHostState,
                     floatingActionButton = {
                         androidx.compose.material3.FloatingActionButton(
@@ -489,6 +492,7 @@ private fun ClofScaffoldContent(
     isExporting: Boolean,
     onOpenDrawer: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    onManageCollections: () -> Unit = onOpenDrawer,
     content: @Composable (androidx.compose.foundation.layout.PaddingValues) -> Unit
 ) {
     Scaffold(
@@ -496,7 +500,7 @@ private fun ClofScaffoldContent(
         topBar = {
             ClofTopBar(
                 darkMode, onDarkModeChange, onImport, isImporting,
-                onExport, isExporting, {}, onOpenDrawer
+                onExport, isExporting, onManageCollections, onOpenDrawer
             )
         },
         content = content
@@ -513,6 +517,7 @@ private fun ClofScaffold(
     isExporting: Boolean,
     onOpenDrawer: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    onManageCollections: () -> Unit = onOpenDrawer,
     floatingActionButton: @Composable () -> Unit,
     content: @Composable (androidx.compose.foundation.layout.PaddingValues) -> Unit
 ) {
@@ -521,7 +526,7 @@ private fun ClofScaffold(
         topBar = {
             ClofTopBar(
                 darkMode, onDarkModeChange, onImport, isImporting,
-                onExport, isExporting, {}, onOpenDrawer
+                onExport, isExporting, onManageCollections, onOpenDrawer
             )
         },
         floatingActionButton = floatingActionButton,
