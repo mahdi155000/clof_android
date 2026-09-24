@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.mahdi155000.clof_android.data.MovieEntity
 import com.mahdi155000.clof_android.viewmodel.MovieViewModel
@@ -41,11 +42,11 @@ fun MoveMoviesScreen(
             .padding(24.dp)
     ) {
         Button(onClick = onBack) {
-            Text("Back")
+            Text(stringResource(R.string.back))
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Move movies and series")
+        Text(stringResource(R.string.move_movies_and_series))
         Spacer(modifier = Modifier.height(12.dp))
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -56,12 +57,12 @@ fun MoveMoviesScreen(
                 ) {
                     Column(modifier = Modifier.padding(end = 8.dp)) {
                         Text(movie.title)
-                        Text("Collection: ${movie.collection}")
+                        Text(stringResource(R.string.collection_label, movie.collection))
                     }
 
                     Column {
                         Button(onClick = { expandedMovieId = movie.id }) {
-                            Text("Move")
+                            Text(stringResource(R.string.move))
                         }
                         DropdownMenu(
                             expanded = expandedMovieId == movie.id,
@@ -70,11 +71,18 @@ fun MoveMoviesScreen(
                             collections
                                 .filter { it != movie.collection }
                                 .forEach { collection ->
+                                    val movedSnackbar = stringResource(
+                                        R.string.moved_to_collection,
+                                        movie.title,
+                                        collection
+                                    )
                                     DropdownMenuItem(
                                         text = { Text(collection) },
                                         onClick = {
                                             movieViewModel.moveMovie(movie, collection)
-                                            onShowUndo("Moved \"${movie.title}\" to $collection") {
+                                            onShowUndo(
+                                                movedSnackbar
+                                            ) {
                                                 movieViewModel.moveMovie(movie, movie.collection)
                                             }
                                             expandedMovieId = null

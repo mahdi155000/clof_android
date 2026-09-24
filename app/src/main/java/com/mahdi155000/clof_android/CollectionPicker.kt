@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun CollectionPicker(
@@ -19,7 +20,7 @@ fun CollectionPicker(
     var expanded by remember { mutableStateOf(false) }
 
     Button(onClick = { expanded = true }) {
-        Text("Collection: $selectedCollection")
+        Text(stringResource(R.string.collection_label, selectedCollection))
     }
 
     DropdownMenu(

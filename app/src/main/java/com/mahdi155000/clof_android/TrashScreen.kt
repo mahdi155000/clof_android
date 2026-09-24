@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.mahdi155000.clof_android.data.MovieEntity
 import com.mahdi155000.clof_android.viewmodel.MovieViewModel
@@ -36,8 +37,8 @@ fun TrashScreen(
     if (showEmptyConfirmation) {
         AlertDialog(
             onDismissRequest = { showEmptyConfirmation = false },
-            title = { Text("Empty trash?") },
-            text = { Text("All movies and series in trash will be permanently deleted.") },
+            title = { Text(stringResource(R.string.empty_trash_title)) },
+            text = { Text(stringResource(R.string.empty_trash_message)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -45,12 +46,12 @@ fun TrashScreen(
                         showEmptyConfirmation = false
                     }
                 ) {
-                    Text("Delete permanently")
+                    Text(stringResource(R.string.delete_permanently))
                 }
             },
             dismissButton = {
                 Button(onClick = { showEmptyConfirmation = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -59,8 +60,8 @@ fun TrashScreen(
     movieToDelete?.let { movie ->
         AlertDialog(
             onDismissRequest = { movieToDelete = null },
-            title = { Text("Delete permanently?") },
-            text = { Text("\"${movie.title}\" cannot be restored after this.") },
+            title = { Text(stringResource(R.string.delete_permanently_title)) },
+            text = { Text(stringResource(R.string.cannot_restore, movie.title)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -68,12 +69,12 @@ fun TrashScreen(
                         movieToDelete = null
                     }
                 ) {
-                    Text("Delete permanently")
+                    Text(stringResource(R.string.delete_permanently))
                 }
             },
             dismissButton = {
                 Button(onClick = { movieToDelete = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -85,24 +86,24 @@ fun TrashScreen(
             .padding(24.dp)
     ) {
         Button(onClick = onBack) {
-            Text("Back")
+            Text(stringResource(R.string.back))
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Trash")
+        Text(stringResource(R.string.trash))
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(
             onClick = { showEmptyConfirmation = true },
             enabled = movies.isNotEmpty()
         ) {
-            Text("Clear trash")
+            Text(stringResource(R.string.clear_trash))
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
         if (movies.isEmpty()) {
-            Text("Trash is empty.")
+            Text(stringResource(R.string.empty_trash))
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(movies, key = MovieEntity::id) { movie ->
@@ -112,14 +113,14 @@ fun TrashScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(movie.title)
-                            Text(if (movie.isSeries) "Series" else "Movie")
+                            Text(stringResource(if (movie.isSeries) R.string.series else R.string.movie))
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(onClick = { movieViewModel.restoreMovie(movie) }) {
-                                Text("Restore")
+                                Text(stringResource(R.string.restore))
                             }
                             Button(onClick = { movieToDelete = movie }) {
-                                Text("Delete")
+                                Text(stringResource(R.string.delete))
                             }
                         }
                     }

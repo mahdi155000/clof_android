@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -34,7 +35,7 @@ fun SettingsScreen(
         verticalArrangement = Arrangement.Top
     ) {
         Text(
-            text = "Settings",
+            text = stringResource(R.string.settings),
             style = MaterialTheme.typography.headlineMedium
         )
 
@@ -45,7 +46,7 @@ fun SettingsScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Dark mode")
+            Text(stringResource(R.string.dark_mode))
             Switch(
                 checked = darkMode,
                 onCheckedChange = onDarkModeChange
@@ -54,11 +55,11 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "Database backup",
+            text = stringResource(R.string.database_backup),
             style = MaterialTheme.typography.titleMedium
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Text("Export a copy of the Clof database or import a previous backup.")
+        Text(stringResource(R.string.backup_description))
         Spacer(modifier = Modifier.height(12.dp))
 
         Button(
@@ -66,7 +67,7 @@ fun SettingsScreen(
             enabled = !isImporting && !isExporting,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(if (isExporting) "Exporting..." else "Export database")
+            Text(stringResource(if (isExporting) R.string.exporting else R.string.export_database))
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -76,7 +77,7 @@ fun SettingsScreen(
             enabled = !isImporting && !isExporting,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(if (isImporting) "Importing..." else "Import database")
+            Text(stringResource(if (isImporting) R.string.importing else R.string.import_database))
         }
     }
 }

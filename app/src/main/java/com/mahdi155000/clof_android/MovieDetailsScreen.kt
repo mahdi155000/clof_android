@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.mahdi155000.clof_android.data.CollectionNames
 import com.mahdi155000.clof_android.data.MovieEntity
@@ -45,7 +46,7 @@ fun MovieDetailsScreen(
                 .padding(24.dp),
             verticalArrangement = Arrangement.Center
         ) {
-            Text("Movie not found")
+            Text(stringResource(R.string.movie_not_found))
 
             Spacer(
                 modifier = Modifier.height(16.dp)
@@ -54,7 +55,7 @@ fun MovieDetailsScreen(
             Button(
                 onClick = onBack
             ) {
-                Text("Back")
+                Text(stringResource(R.string.back))
             }
         }
 
@@ -74,7 +75,7 @@ fun MovieDetailsScreen(
         Button(
             onClick = onBack
         ) {
-            Text("Back")
+            Text(stringResource(R.string.back))
         }
 
         Spacer(
@@ -92,7 +93,7 @@ fun MovieDetailsScreen(
 
         if (currentMovie.genre.isNotBlank()) {
             Text(
-                text = "Genre: ${currentMovie.genre}",
+                text = stringResource(R.string.genre_value, currentMovie.genre),
                 style = MaterialTheme.typography.bodyLarge
             )
 
@@ -103,7 +104,7 @@ fun MovieDetailsScreen(
 
         if (!currentMovie.notes.isNullOrBlank()) {
             Text(
-                text = "Notes: ${currentMovie.notes}",
+                text = stringResource(R.string.notes_value, currentMovie.notes),
                 style = MaterialTheme.typography.bodyLarge
             )
 
@@ -112,9 +113,9 @@ fun MovieDetailsScreen(
 
         Text(
             text = if (currentMovie.isSeries) {
-                "Type: Series"
+                stringResource(R.string.type_value, stringResource(R.string.series))
             } else {
-                "Type: Movie"
+                stringResource(R.string.type_value, stringResource(R.string.movie))
             },
             style = MaterialTheme.typography.bodyLarge
         )
@@ -124,7 +125,11 @@ fun MovieDetailsScreen(
         )
 
         Text(
-            text = "Rating: ${currentMovie.personalRating?.let { "$it/5" } ?: "Not rated"}",
+            text = stringResource(
+                R.string.rating_value,
+                currentMovie.personalRating?.let { "$it/5" }
+                    ?: stringResource(R.string.not_rated)
+            ),
             style = MaterialTheme.typography.bodyLarge
         )
 
@@ -136,7 +141,11 @@ fun MovieDetailsScreen(
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(if (currentMovie.favorite) "Remove Favorite" else "Mark as Favorite")
+            Text(
+                stringResource(
+                    if (currentMovie.favorite) R.string.remove_favorite else R.string.mark_favorite
+                )
+            )
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -152,9 +161,9 @@ fun MovieDetailsScreen(
         ) {
             Text(
                 if (currentMovie.personalRating == null) {
-                    "Rate 5/5"
+                    stringResource(R.string.rate_five)
                 } else {
-                    "Clear Rating"
+                    stringResource(R.string.clear_rating)
                 }
             )
         }
@@ -162,9 +171,9 @@ fun MovieDetailsScreen(
         if (currentMovie.isSeries) {
             Text(
                 text = if (currentMovie.watched) {
-                    "Status: Completed"
+                    stringResource(R.string.status_value, stringResource(R.string.completed))
                 } else {
-                    "Status: In progress"
+                    stringResource(R.string.status_value, stringResource(R.string.in_progress))
                 },
                 style = MaterialTheme.typography.bodyLarge
             )
@@ -172,7 +181,7 @@ fun MovieDetailsScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Season: ${currentMovie.season}",
+                text = stringResource(R.string.season_value, currentMovie.season),
                 style = MaterialTheme.typography.bodyLarge
             )
 
@@ -181,7 +190,7 @@ fun MovieDetailsScreen(
             )
 
             Text(
-                text = "Episode: ${currentMovie.episode}",
+                text = stringResource(R.string.episode_value, currentMovie.episode),
                 style = MaterialTheme.typography.bodyLarge
             )
 
@@ -193,7 +202,7 @@ fun MovieDetailsScreen(
                 onClick = { movieViewModel.previousEpisode(currentMovie) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Previous Episode")
+                Text(stringResource(R.string.previous_episode))
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -202,7 +211,7 @@ fun MovieDetailsScreen(
                 onClick = { movieViewModel.nextEpisode(currentMovie) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Next Episode")
+                Text(stringResource(R.string.next_episode))
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -211,7 +220,7 @@ fun MovieDetailsScreen(
                 onClick = { movieViewModel.previousSeason(currentMovie) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Previous Season")
+                Text(stringResource(R.string.previous_season))
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -220,17 +229,23 @@ fun MovieDetailsScreen(
                 onClick = { movieViewModel.nextSeason(currentMovie) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Next Season (Episode 1)")
+                Text(stringResource(R.string.next_season_episode_one))
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            val markedSeriesMessage = stringResource(
+                R.string.series_marked,
+                stringResource(
+                    if (currentMovie.watched) R.string.in_progress else R.string.completed
+                )
+            )
             Button(
                 onClick = {
                     val previous = currentMovie.watched
                     movieViewModel.setWatched(currentMovie, !previous)
                     onShowUndo(
-                        "Series marked ${if (previous) "in progress" else "completed"}"
+                        markedSeriesMessage
                     ) {
                         movieViewModel.setWatched(currentMovie, previous)
                     }
@@ -239,24 +254,28 @@ fun MovieDetailsScreen(
             ) {
                 Text(
                     if (currentMovie.watched) {
-                        "Mark Series In Progress"
+                        stringResource(R.string.mark_series_in_progress)
                     } else {
-                        "Mark Series Completed"
+                        stringResource(R.string.mark_series_completed)
                     }
                 )
             }
         } else {
             Text(
                 text = if (currentMovie.watched) {
-                    "Status: Watched"
+                    stringResource(R.string.status_value, stringResource(R.string.watched))
                 } else {
-                    "Status: Not watched"
+                    stringResource(R.string.status_value, stringResource(R.string.not_watched))
                 },
                 style = MaterialTheme.typography.bodyLarge
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            val markedStatusMessage = stringResource(
+                R.string.marked_status,
+                stringResource(if (currentMovie.watched) R.string.unwatched else R.string.watched)
+            )
             Button(
                 onClick = {
                     val previous = currentMovie.watched
@@ -264,7 +283,7 @@ fun MovieDetailsScreen(
                         currentMovie,
                         !previous
                     )
-                    onShowUndo("Marked ${if (previous) "unwatched" else "watched"}") {
+                    onShowUndo(markedStatusMessage) {
                         movieViewModel.setWatched(currentMovie, previous)
                     }
                 },
@@ -272,9 +291,9 @@ fun MovieDetailsScreen(
             ) {
                 Text(
                     if (currentMovie.watched) {
-                        "Mark as Unwatched"
+                        stringResource(R.string.mark_as_unwatched)
                     } else {
-                        "Mark as Watched"
+                        stringResource(R.string.mark_as_watched)
                     }
                 )
             }
@@ -290,7 +309,7 @@ fun MovieDetailsScreen(
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Move to Watched collection")
+                    Text(stringResource(R.string.move_to_watched_collection))
                 }
             }
         }
@@ -298,7 +317,7 @@ fun MovieDetailsScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Collection: ${currentMovie.collection}",
+            text = stringResource(R.string.collection_label, currentMovie.collection),
             style = MaterialTheme.typography.bodyLarge
         )
 
@@ -310,7 +329,7 @@ fun MovieDetailsScreen(
             onClick = { onEdit(currentMovie) },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Edit Movie")
+            Text(stringResource(R.string.edit_movie))
         }
 
         Spacer(
@@ -320,15 +339,15 @@ fun MovieDetailsScreen(
         Button(onClick = { showDeleteConfirmation = true },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Move to Trash")
+            Text(stringResource(R.string.move_to_trash))
         }
     }
 
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
-            title = { Text("Move to trash?") },
-            text = { Text("\"${currentMovie.title}\" can be restored from Trash.") },
+            title = { Text(stringResource(R.string.move_to_trash_title)) },
+            text = { Text(stringResource(R.string.restorable_from_trash, currentMovie.title)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -336,12 +355,12 @@ fun MovieDetailsScreen(
                         showDeleteConfirmation = false
                     }
                 ) {
-                    Text("Move to Trash")
+                    Text(stringResource(R.string.move_to_trash))
                 }
             },
             dismissButton = {
                 Button(onClick = { showDeleteConfirmation = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )

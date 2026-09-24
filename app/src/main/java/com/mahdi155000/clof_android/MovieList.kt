@@ -54,6 +54,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mahdi155000.clof_android.data.CollectionNames
@@ -235,10 +236,10 @@ fun MovieList(
                     vertical = 8.dp
                 ),
             label = {
-                Text("Search")
+                Text(stringResource(R.string.search))
             },
             placeholder = {
-                Text("Search movies and series")
+                Text(stringResource(R.string.search_movies_series))
             },
             singleLine = true
         )
@@ -253,9 +254,9 @@ fun MovieList(
         ) {
             Text(
                 if (showFilters) {
-                    "Hide Filters"
+                    stringResource(R.string.hide_filters)
                 } else {
-                    "Show Filters"
+                    stringResource(R.string.show_filters)
                 }
             )
         }
@@ -264,12 +265,14 @@ fun MovieList(
             onClick = { reorderMode = !reorderMode },
             modifier = Modifier.padding(horizontal = 12.dp)
         ) {
-            Text(if (reorderMode) "Done selecting" else "Select items")
+            Text(
+                stringResource(if (reorderMode) R.string.done_selecting else R.string.select_items)
+            )
         }
 
         if (showFilters) {
             Text(
-                text = "Type",
+                text = stringResource(R.string.type),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(
                     start = 12.dp,
@@ -286,7 +289,7 @@ fun MovieList(
             ) {
                 item {
                     FilterButton(
-                        text = "All",
+                        text = stringResource(R.string.all),
                         selected = typeFilter == "All"
                     ) {
                         typeFilter = "All"
@@ -294,7 +297,7 @@ fun MovieList(
                 }
                 item {
                     FilterButton(
-                        text = "Movies",
+                        text = stringResource(R.string.movies),
                         selected = typeFilter == "Movies"
                     ) {
                         typeFilter = "Movies"
@@ -302,7 +305,7 @@ fun MovieList(
                 }
                 item {
                     FilterButton(
-                        text = "Series",
+                        text = stringResource(R.string.series),
                         selected = typeFilter == "Series"
                     ) {
                         typeFilter = "Series"
@@ -311,7 +314,7 @@ fun MovieList(
             }
 
             Text(
-                text = "Watched",
+                text = stringResource(R.string.watched),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(
                     start = 12.dp,
@@ -327,7 +330,7 @@ fun MovieList(
             ) {
                 item {
                     FilterButton(
-                        text = "All",
+                        text = stringResource(R.string.all),
                         selected = watchedFilter == "All"
                     ) {
                         watchedFilter = "All"
@@ -335,7 +338,7 @@ fun MovieList(
                 }
                 item {
                     FilterButton(
-                        text = "Watched",
+                        text = stringResource(R.string.watched),
                         selected = watchedFilter == "Watched"
                     ) {
                         watchedFilter = "Watched"
@@ -343,7 +346,7 @@ fun MovieList(
                 }
                 item {
                     FilterButton(
-                        text = "Unwatched",
+                        text = stringResource(R.string.unwatched),
                         selected = watchedFilter == "Unwatched"
                     ) {
                         watchedFilter = "Unwatched"
@@ -352,7 +355,7 @@ fun MovieList(
             }
 
             Text(
-                text = "Collection",
+                text = stringResource(R.string.collection),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(
                     start = 12.dp,
@@ -361,7 +364,7 @@ fun MovieList(
             )
 
             Text(
-                    text = "Favorites",
+                    text = stringResource(R.string.favorites),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(start = 12.dp, top = 12.dp)
                 )
@@ -370,18 +373,20 @@ fun MovieList(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     item {
-                        FilterButton("All", favoriteFilter == "All") { favoriteFilter = "All" }
+                        FilterButton(stringResource(R.string.all), favoriteFilter == "All") {
+                            favoriteFilter = "All"
+                        }
                     }
                     item {
                         FilterButton(
-                            "Favorites",
+                            stringResource(R.string.favorites),
                             favoriteFilter == "Favorites"
                         ) { favoriteFilter = "Favorites" }
                     }
                 }
 
             Text(
-                    text = "Rating",
+                    text = stringResource(R.string.rating),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(start = 12.dp, top = 12.dp)
                 )
@@ -390,13 +395,17 @@ fun MovieList(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     item {
-                        FilterButton("All", ratingFilter == "All") { ratingFilter = "All" }
+                        FilterButton(stringResource(R.string.all), ratingFilter == "All") {
+                            ratingFilter = "All"
+                        }
                     }
                     item {
-                        FilterButton("Rated", ratingFilter == "Rated") { ratingFilter = "Rated" }
+                        FilterButton(stringResource(R.string.rated), ratingFilter == "Rated") {
+                            ratingFilter = "Rated"
+                        }
                     }
                     item {
-                        FilterButton("Unrated", ratingFilter == "Unrated") {
+                        FilterButton(stringResource(R.string.unrated), ratingFilter == "Unrated") {
                             ratingFilter = "Unrated"
                         }
                     }
@@ -410,7 +419,7 @@ fun MovieList(
             ) {
                 item {
                     FilterButton(
-                        text = "Custom",
+                        text = stringResource(R.string.custom),
                         selected = sortOption == "Custom Order"
                     ) {
                         sortOption = if (sortOption == "Custom Order") {
@@ -422,7 +431,7 @@ fun MovieList(
                 }
                 item {
                     FilterButton(
-                        text = "All",
+                        text = stringResource(R.string.all),
                         selected = collectionFilter == "All"
                     ) {
                         collectionFilter = "All"
@@ -443,7 +452,7 @@ fun MovieList(
             }
 
             Text(
-                text = "Sort",
+                text = stringResource(R.string.sort),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(
                     start = 12.dp,
@@ -459,7 +468,7 @@ fun MovieList(
             ) {
                 item {
                     FilterButton(
-                        text = "Recent",
+                        text = stringResource(R.string.recent),
                         selected = sortOption == "Recently Added"
                     ) {
                         sortOption = "Recently Added"
@@ -467,7 +476,7 @@ fun MovieList(
                 }
                 item {
                     FilterButton(
-                        text = "Oldest",
+                        text = stringResource(R.string.oldest),
                         selected = sortOption == "Oldest Added"
                     ) {
                         sortOption = "Oldest Added"
@@ -475,7 +484,7 @@ fun MovieList(
                 }
                 item {
                     FilterButton(
-                        text = "A-Z",
+                        text = stringResource(R.string.a_z),
                         selected = sortOption == "Title A-Z"
                     ) {
                         sortOption = "Title A-Z"
@@ -483,7 +492,7 @@ fun MovieList(
                 }
                 item {
                     FilterButton(
-                        text = "Z-A",
+                        text = stringResource(R.string.z_a),
                         selected = sortOption == "Title Z-A"
                     ) {
                         sortOption = "Title Z-A"
@@ -491,7 +500,7 @@ fun MovieList(
                 }
                 item {
                     FilterButton(
-                        text = "Collection",
+                        text = stringResource(R.string.collection),
                         selected = sortOption == "Collection A-Z"
                     ) {
                         sortOption = "Collection A-Z"
@@ -499,7 +508,7 @@ fun MovieList(
                 }
                 item {
                     FilterButton(
-                        text = "Genre",
+                        text = stringResource(R.string.genre),
                         selected = sortOption == "Genre A-Z"
                     ) {
                         sortOption = "Genre A-Z"
@@ -507,7 +516,7 @@ fun MovieList(
                 }
                 item {
                     FilterButton(
-                        text = "Watched",
+                        text = stringResource(R.string.watched),
                         selected = sortOption == "Watched First"
                     ) {
                         sortOption = "Watched First"
@@ -515,7 +524,7 @@ fun MovieList(
                 }
                 item {
                     FilterButton(
-                        text = "Progress",
+                        text = stringResource(R.string.progress),
                         selected = sortOption == "Series Progress"
                     ) {
                         sortOption = "Series Progress"
@@ -523,7 +532,7 @@ fun MovieList(
                 }
                 item {
                     FilterButton(
-                        text = "Favorites",
+                        text = stringResource(R.string.favorites),
                         selected = sortOption == "Favorites First"
                     ) {
                         sortOption = "Favorites First"
@@ -531,7 +540,7 @@ fun MovieList(
                 }
                 item {
                     FilterButton(
-                        text = "Rating",
+                        text = stringResource(R.string.rating),
                         selected = sortOption == "Highest Rated"
                     ) {
                         sortOption = "Highest Rated"
@@ -553,9 +562,9 @@ fun MovieList(
             ) {
                 Text(
                     text = if (movies.isEmpty()) {
-                        "No movies yet"
+                        stringResource(R.string.no_movies_yet)
                     } else {
-                        "No results found"
+                        stringResource(R.string.no_results_found)
                     },
                     style = MaterialTheme.typography.headlineSmall
                 )
@@ -566,9 +575,9 @@ fun MovieList(
 
                 Text(
                     text = if (movies.isEmpty()) {
-                        "Press + to add a movie."
+                        stringResource(R.string.press_plus_to_add)
                     } else {
-                        "Try changing your search or filters."
+                        stringResource(R.string.change_search_filters)
                     }
                 )
             }
@@ -626,7 +635,7 @@ fun FilterButton(
     ) {
         Text(
             if (selected) {
-                "✓ $text"
+                stringResource(R.string.selected_item, text)
             } else {
                 text
             }
@@ -670,10 +679,14 @@ fun MovieItem(
             if (reorderMode) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = { movieViewModel.setPinned(movie, !movie.pinned) }) {
-                        Text(if (movie.pinned) "Unpin" else "Pin")
+                        Text(stringResource(if (movie.pinned) R.string.unpin else R.string.pin))
                     }
-                    Button(onClick = { onMove(movie, -1) }) { Text("Move up") }
-                    Button(onClick = { onMove(movie, 1) }) { Text("Move down") }
+                    Button(onClick = { onMove(movie, -1) }) {
+                        Text(stringResource(R.string.move_up))
+                    }
+                    Button(onClick = { onMove(movie, 1) }) {
+                        Text(stringResource(R.string.move_down))
+                    }
                 }
             }
 
@@ -694,9 +707,9 @@ fun MovieItem(
 
             Text(
                 text = if (movie.isSeries) {
-                    "Series"
+                    stringResource(R.string.series)
                 } else {
-                    "Movie"
+                    stringResource(R.string.movie)
                 },
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -707,7 +720,7 @@ fun MovieItem(
                 )
 
                 Text(
-                    text = "Season ${movie.season} • Episode ${movie.episode}",
+                    text = stringResource(R.string.season_episode, movie.season, movie.episode),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -719,18 +732,18 @@ fun MovieItem(
             if (!movie.isSeries) {
                 Text(
                     text = if (movie.watched) {
-                        "Watched"
+                        stringResource(R.string.watched)
                     } else {
-                        "Not watched"
+                        stringResource(R.string.not_watched)
                     },
                     style = MaterialTheme.typography.bodyMedium
                 )
             } else {
                 Text(
                     text = if (movie.watched) {
-                        "Completed"
+                        stringResource(R.string.completed)
                     } else {
-                        "In progress"
+                        stringResource(R.string.in_progress)
                     },
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -746,6 +759,15 @@ fun MovieItem(
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                val markedStatusMessage = stringResource(
+                    R.string.marked_status,
+                    stringResource(if (movie.watched) R.string.unwatched else R.string.watched)
+                )
+                val movedToWatchedMessage = stringResource(
+                    R.string.moved_to_collection,
+                    movie.title,
+                    CollectionNames.WATCHED
+                )
                 Button(
                     onClick = {
                         if (movie.isSeries) {
@@ -756,7 +778,7 @@ fun MovieItem(
                                 movie,
                                 !previous
                             )
-                            onShowUndo("Marked \"${movie.title}\" ${if (previous) "unwatched" else "watched"}") {
+                            onShowUndo(markedStatusMessage) {
                                 movieViewModel.setWatched(movie, previous)
                             }
                         }
@@ -764,11 +786,11 @@ fun MovieItem(
                 ) {
                     Text(
                         if (movie.isSeries) {
-                            "Next Episode"
+                            stringResource(R.string.next_episode)
                         } else if (movie.watched) {
-                            "Unwatch"
+                            stringResource(R.string.unwatch)
                         } else {
-                            "Watched"
+                            stringResource(R.string.watched)
                         }
                     )
                 }
@@ -781,9 +803,9 @@ fun MovieItem(
                     ) {
                         Text(
                             if (movie.watched) {
-                                "Reopen Series"
+                                stringResource(R.string.reopen_series)
                             } else {
-                                "Complete Series"
+                                stringResource(R.string.complete_series)
                             }
                         )
                     }
@@ -796,12 +818,12 @@ fun MovieItem(
                         onClick = {
                             val previousCollection = movie.collection
                             movieViewModel.moveMovie(movie, CollectionNames.WATCHED)
-                            onShowUndo("Moved \"${movie.title}\" to ${CollectionNames.WATCHED}") {
+                            onShowUndo(movedToWatchedMessage) {
                                 movieViewModel.moveMovie(movie, previousCollection)
                             }
                         }
                     ) {
-                        Text("To Watched")
+                        Text(stringResource(R.string.to_watched))
                     }
                 }
 
@@ -811,7 +833,7 @@ fun MovieItem(
                     }
                 ) {
 
-                    Text("Edit")
+                    Text(stringResource(R.string.edit))
                 }
 
                 Button(
@@ -819,7 +841,7 @@ fun MovieItem(
                         onDelete(movie)
                     }
                 ) {
-                    Text("Move to Trash")
+                    Text(stringResource(R.string.move_to_trash))
                 }
             }
         }

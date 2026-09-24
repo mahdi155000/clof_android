@@ -5,6 +5,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -19,10 +20,10 @@ fun ClofTopBar(
     onOpenDrawer: () -> Unit
 ) {
     TopAppBar(
-        title = { Text("CLOF") },
+        title = { Text(stringResource(R.string.clof_title)) },
         navigationIcon = {
             IconButton(onClick = onOpenDrawer) {
-                Text("☰")
+                Text(stringResource(R.string.menu_icon))
             }
         },
         actions = {}

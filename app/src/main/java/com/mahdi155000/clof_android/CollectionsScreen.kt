@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.mahdi155000.clof_android.data.CollectionNames
 import com.mahdi155000.clof_android.viewmodel.MovieViewModel
@@ -34,6 +35,15 @@ fun CollectionsScreen(
     onCollectionRemoved: (name: String) -> Unit = {},
     onViewCollection: (name: String) -> Unit = {}
 ) {
+    val collectionAddedMessage = stringResource(R.string.collection_added)
+    val collectionExistsMessage = stringResource(R.string.collection_exists)
+    val collectionRenamedMessage = stringResource(R.string.collection_renamed)
+    val newCollectionNameMessage = stringResource(R.string.new_collection_name)
+    val reservedCollectionMessage = stringResource(R.string.reserved_collection)
+    val collectionRemovedMessage = stringResource(
+        R.string.collection_removed,
+        CollectionNames.MAIN
+    )
     val collections by movieViewModel.collections.collectAsState()
     var newCollectionName by remember { mutableStateOf("") }
     var editingCollection by remember { mutableStateOf<String?>(null) }
@@ -48,11 +58,11 @@ fun CollectionsScreen(
             .padding(24.dp)
     ) {
         Button(onClick = onBack) {
-            Text("Back")
+            Text(stringResource(R.string.back))
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Manage collections")
+        Text(stringResource(R.string.manage_collections))
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -60,7 +70,7 @@ fun CollectionsScreen(
             value = newCollectionName,
             onValueChange = { newCollectionName = it },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("New collection") },
+            label = { Text(stringResource(R.string.new_collection)) },
             singleLine = true
         )
 
@@ -73,16 +83,16 @@ fun CollectionsScreen(
                     movieViewModel.addCollection(name) { added ->
                         message = if (added) {
                             newCollectionName = ""
-                            "Collection added."
+                            collectionAddedMessage
                         } else {
-                            "That collection already exists."
+                            collectionExistsMessage
                         }
                     }
                 }
             },
             enabled = newCollectionName.isNotBlank()
         ) {
-            Text("Add collection")
+            Text(stringResource(R.string.add_collection))
         }
 
         message?.let {
@@ -99,7 +109,7 @@ fun CollectionsScreen(
                         value = editedName,
                         onValueChange = { editedName = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Collection name") },
+                        label = { Text(stringResource(R.string.collection_name)) },
                         singleLine = true
                     )
 
@@ -115,21 +125,21 @@ fun CollectionsScreen(
                                             message = if (renamed) {
                                                 editingCollection = null
                                                 onCollectionRenamed(collection, name)
-                                                "Collection renamed."
+                                                collectionRenamedMessage
                                             } else {
-                                                "Use a new collection name."
+                                                newCollectionNameMessage
                                             }
                                         }
                                     }
                                 },
                                 enabled = editedName.isNotBlank()
                             ) {
-                                Text("Save")
+                                Text(stringResource(R.string.save))
                             }
                         }
                         item {
                             Button(onClick = { editingCollection = null }) {
-                                Text("Cancel")
+                                Text(stringResource(R.string.cancel))
                             }
                         }
                     }
@@ -141,7 +151,7 @@ fun CollectionsScreen(
                                 Button(
                                     onClick = { onViewCollection(collection) }
                                 ) {
-                                    Text("View")
+                                    Text(stringResource(R.string.view))
                                 }
                             }
                             item {
@@ -152,7 +162,7 @@ fun CollectionsScreen(
                                     },
                                     enabled = !CollectionNames.isReserved(collection)
                                 ) {
-                                    Text("Rename")
+                                    Text(stringResource(R.string.rename))
                                 }
                             }
                             item {
@@ -162,7 +172,7 @@ fun CollectionsScreen(
                                     },
                                     enabled = !CollectionNames.isReserved(collection)
                                 ) {
-                                    Text("Remove")
+                                    Text(stringResource(R.string.remove))
                                 }
                             }
 
@@ -177,15 +187,20 @@ fun CollectionsScreen(
             val affectedMovies = movies.filter { it.collection == collection }
             AlertDialog(
                 onDismissRequest = { collectionToRemove = null },
-                title = { Text("Remove collection?") },
+                title = { Text(stringResource(R.string.remove_collection_title)) },
                 text = {
                     Text(
                         if (affectedMovies.isEmpty()) {
-                            "No movies or series are in \"$collection\"."
+                            stringResource(R.string.no_items_in_collection, collection)
                         } else {
                             val titles = affectedMovies.joinToString("\n") { "• ${it.title}" }
-                            "The ${affectedMovies.size} movie(s)/series in \"$collection\" " +
-                                "will be moved to \"${CollectionNames.MAIN}\":\n\n$titles"
+                            stringResource(
+                                R.string.collection_removal_warning,
+                                affectedMovies.size,
+                                collection,
+                                CollectionNames.MAIN,
+                                titles
+                            )
                         }
                     )
                 },
@@ -196,19 +211,19 @@ fun CollectionsScreen(
                             movieViewModel.removeCollection(collection) { removed ->
                                 message = if (removed) {
                                     onCollectionRemoved(collection)
-                                    "Collection removed; its movies moved to ${CollectionNames.MAIN}."
+                                    collectionRemovedMessage
                                 } else {
-                                    "Reserved collections cannot be removed."
+                                    reservedCollectionMessage
                                 }
                             }
                         }
                     ) {
-                        Text("Remove")
+                        Text(stringResource(R.string.remove))
                     }
                 },
                 dismissButton = {
                     Button(onClick = { collectionToRemove = null }) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.cancel))
                     }
                 }
             )

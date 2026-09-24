@@ -26,6 +26,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mahdi155000.clof_android.data.MovieEntity
@@ -39,6 +40,10 @@ fun EditMovieScreen(
     movieViewModel: MovieViewModel,
     onMovieUpdated: () -> Unit
 ) {
+    val seasonErrorMessage = stringResource(R.string.season_positive_integer)
+    val episodeErrorMessage = stringResource(R.string.episode_positive_integer)
+    val duplicateMovieMessage = stringResource(R.string.duplicate_movie)
+    val updateMovieErrorMessage = stringResource(R.string.update_movie_error)
     var title by rememberSaveable(movie.id) { mutableStateOf(movie.title) }
     var genresForMovie by rememberSaveable(movie.id) {
         mutableStateOf(movie.genre.split(",").map { it.trim() }.filter { it.isNotBlank() })
@@ -66,7 +71,7 @@ fun EditMovieScreen(
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text("Edit Movie")
+        Text(stringResource(R.string.edit_movie))
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -74,7 +79,7 @@ fun EditMovieScreen(
             value = title,
             onValueChange = { title = it },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Title") },
+            label = { Text(stringResource(R.string.title)) },
             singleLine = true,
             enabled = !isSaving
         )
@@ -102,7 +107,7 @@ fun EditMovieScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Series")
+            Text(stringResource(R.string.series))
 
             Switch(
                 checked = isSeries,
@@ -121,7 +126,7 @@ fun EditMovieScreen(
                     seasonError = null
                 },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Season") },
+                label = { Text(stringResource(R.string.season)) },
                 isError = seasonError != null,
                 supportingText = seasonError?.let { message -> { Text(message) } },
                 keyboardOptions = KeyboardOptions(
@@ -140,7 +145,7 @@ fun EditMovieScreen(
                     episodeError = null
                 },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Episode") },
+                label = { Text(stringResource(R.string.episode)) },
                 isError = episodeError != null,
                 supportingText = episodeError?.let { message -> { Text(message) } },
                 keyboardOptions = KeyboardOptions(
@@ -157,7 +162,7 @@ fun EditMovieScreen(
             value = notes,
             onValueChange = { notes = it },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Notes (optional)") },
+            label = { Text(stringResource(R.string.notes_optional)) },
             minLines = 3,
             enabled = !isSaving
         )
@@ -172,7 +177,7 @@ fun EditMovieScreen(
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Personal rating (1-5, optional)") },
+            label = { Text(stringResource(R.string.personal_rating_optional)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             singleLine = true,
             enabled = !isSaving
@@ -183,7 +188,7 @@ fun EditMovieScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Favorite")
+            Text(stringResource(R.string.favorite))
             Switch(
                 checked = favorite,
                 onCheckedChange = { favorite = it },
@@ -210,12 +215,12 @@ fun EditMovieScreen(
                 val parsedSeason = if (isSeries) season.toPositiveIntOrNull() else 0
                 val parsedEpisode = if (isSeries) episode.toPositiveIntOrNull() else 0
                 seasonError = if (isSeries && parsedSeason == null) {
-                    "Season must be a positive integer."
+                    seasonErrorMessage
                 } else {
                     null
                 }
                 episodeError = if (isSeries && parsedEpisode == null) {
-                    "Episode must be a positive integer."
+                    episodeErrorMessage
                 } else {
                     null
                 }
@@ -247,11 +252,11 @@ fun EditMovieScreen(
                     },
                     onDuplicate = {
                         isSaving = false
-                        saveError = "A movie with this title already exists."
+                        saveError = duplicateMovieMessage
                     },
                     onError = {
                         isSaving = false
-                        saveError = "Couldn't update the movie. Please try again."
+                        saveError = updateMovieErrorMessage
                     }
                 )
             },
@@ -260,9 +265,9 @@ fun EditMovieScreen(
         ) {
             Text(
                 if (isSaving) {
-                    "Saving..."
+                    stringResource(R.string.saving)
                 } else {
-                    "Save Changes"
+                    stringResource(R.string.save_changes)
                 }
             )
         }

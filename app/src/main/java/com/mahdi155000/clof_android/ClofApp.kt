@@ -30,6 +30,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import java.util.Locale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -68,6 +70,15 @@ fun ClofApp(
     movieViewModel: MovieViewModel = viewModel()
 ) {
     val navController = rememberNavController()
+    val importedItemsFormat = stringResource(R.string.imported_items)
+    val importFailedFormat = stringResource(R.string.import_failed)
+    val invalidDatabaseMessage = stringResource(R.string.invalid_clof_database)
+    val databaseExportedMessage = stringResource(R.string.database_exported)
+    val exportFailedFormat = stringResource(R.string.export_failed)
+    val unableToWriteDatabaseMessage = stringResource(R.string.unable_to_write_database)
+    val collectionSummaryFormat = stringResource(R.string.collection_summary)
+    val undoLabel = stringResource(R.string.undo)
+    val moveToTrashSnackbarFormat = stringResource(R.string.move_to_trash_snackbar)
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -89,12 +100,20 @@ fun ClofApp(
                 uri = uri,
                 onComplete = { result ->
                     isImporting = false
-                    importMessage = "Imported ${result.imported} items. " +
-                        "Skipped ${result.skipped} duplicate items."
+                    importMessage = String.format(
+                        Locale.getDefault(),
+                        importedItemsFormat,
+                        result.imported,
+                        result.skipped
+                    )
                 },
                 onError = { error ->
                     isImporting = false
-                    importMessage = "Import failed: ${error.message ?: "invalid Clof database"}"
+                    importMessage = String.format(
+                        Locale.getDefault(),
+                        importFailedFormat,
+                        error.message ?: invalidDatabaseMessage
+                    )
                 }
             )
         }
@@ -108,11 +127,15 @@ fun ClofApp(
                 uri = uri,
                 onComplete = {
                     isExporting = false
-                    importMessage = "Database exported successfully."
+                    importMessage = databaseExportedMessage
                 },
                 onError = { error ->
                     isExporting = false
-                    importMessage = "Export failed: ${error.message ?: "unable to write database"}"
+                    importMessage = String.format(
+                        Locale.getDefault(),
+                        exportFailedFormat,
+                        error.message ?: unableToWriteDatabaseMessage
+                    )
                 }
             )
         }
@@ -125,7 +148,13 @@ fun ClofApp(
             movies.filter { it.collection == collectionName }
         }
         val watched = matchingMovies.count { it.watched }
-        return "${matchingMovies.size} (${watched} watched, ${matchingMovies.size - watched} unwatched)"
+        return String.format(
+            Locale.getDefault(),
+            collectionSummaryFormat,
+            matchingMovies.size,
+            watched,
+            matchingMovies.size - watched
+        )
     }
 
     val onImport = {
@@ -136,7 +165,11 @@ fun ClofApp(
     }
     val showUndoSnackbar: (String, () -> Unit) -> Unit = { message, undo ->
         scope.launch {
-            if (snackbarHostState.showSnackbar(message, "Undo") == SnackbarResult.ActionPerformed) {
+            if (snackbarHostState.showSnackbar(
+                    message,
+                    undoLabel
+                ) == SnackbarResult.ActionPerformed
+            ) {
                 undo()
             }
         }
@@ -155,9 +188,11 @@ fun ClofApp(
         AlertDialog(
             onDismissRequest = { importMessage = null },
             confirmButton = {
-                Button(onClick = { importMessage = null }) { Text("OK") }
+                Button(onClick = { importMessage = null }) {
+                    Text(stringResource(R.string.ok))
+                }
             },
-            title = { Text("Clof import") },
+            title = { Text(stringResource(R.string.clof_import)) },
             text = { Text(message) }
         )
     }
@@ -167,7 +202,7 @@ fun ClofApp(
         drawerContent = {
             ModalDrawerSheet {
                 Text(
-                    text = "Menu",
+                    text = stringResource(R.string.menu),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(16.dp)
                 )
@@ -179,7 +214,9 @@ fun ClofApp(
                     ?.let(Uri::decode)
 
                 NavigationDrawerItem(
-                    label = { Text("All collections (${collectionSummary(null)})") },
+                    label = {
+                        Text(stringResource(R.string.all_collections, collectionSummary(null)))
+                    },
                     selected = currentDestination?.route == ClofRoutes.HOME &&
                         routeCollection == null,
                     onClick = {
@@ -190,7 +227,15 @@ fun ClofApp(
                 if (collectionsExpanded) {
                     collections.forEach { collection ->
                         NavigationDrawerItem(
-                            label = { Text("  $collection (${collectionSummary(collection)})") },
+                            label = {
+                                Text(
+                                    stringResource(
+                                        R.string.collection_item,
+                                        collection,
+                                        collectionSummary(collection)
+                                    )
+                                )
+                            },
                             selected = currentDestination?.route == ClofRoutes.HOME &&
                                 routeCollection == collection,
                             onClick = {
@@ -201,27 +246,27 @@ fun ClofApp(
                     }
                 }
                 NavigationDrawerItem(
-                    label = { Text("Manage collections") },
+                    label = { Text(stringResource(R.string.manage_collections)) },
                     selected = currentDestination?.route == ClofRoutes.COLLECTIONS,
                     onClick = { navigateFromDrawer(ClofRoutes.COLLECTIONS) }
                 )
                 NavigationDrawerItem(
-                    label = { Text("Move movies / series") },
+                    label = { Text(stringResource(R.string.move_movies_series)) },
                     selected = currentDestination?.route == ClofRoutes.MOVE_MOVIES,
                     onClick = { navigateFromDrawer(ClofRoutes.MOVE_MOVIES) }
                 )
                 NavigationDrawerItem(
-                    label = { Text("Manage genres") },
+                    label = { Text(stringResource(R.string.manage_genres)) },
                     selected = currentDestination?.route == ClofRoutes.GENRES,
                     onClick = { navigateFromDrawer(ClofRoutes.GENRES) }
                 )
                 NavigationDrawerItem(
-                    label = { Text("Trash") },
+                    label = { Text(stringResource(R.string.trash)) },
                     selected = currentDestination?.route == ClofRoutes.TRASH,
                     onClick = { navigateFromDrawer(ClofRoutes.TRASH) }
                 )
                 NavigationDrawerItem(
-                    label = { Text("Settings") },
+                    label = { Text(stringResource(R.string.settings)) },
                     selected = currentDestination?.route == ClofRoutes.SETTINGS,
                     onClick = { navigateFromDrawer(ClofRoutes.SETTINGS) }
                 )
@@ -254,7 +299,7 @@ fun ClofApp(
                     floatingActionButton = {
                         androidx.compose.material3.FloatingActionButton(
                             onClick = { navController.navigate(ClofRoutes.ADD_MOVIE) }
-                        ) { Text("+") }
+                        ) { Text(stringResource(R.string.add)) }
                     }
                 ) { padding ->
                     MovieList(
@@ -406,21 +451,29 @@ fun ClofApp(
     movieToDelete?.let { movie ->
         AlertDialog(
             onDismissRequest = { movieToDelete = null },
-            title = { Text("Move to trash?") },
-            text = { Text("\"${movie.title}\" can be restored from Trash.") },
+            title = { Text(stringResource(R.string.move_to_trash_title)) },
+            text = { Text(stringResource(R.string.restorable_from_trash, movie.title)) },
             confirmButton = {
                 Button(
                     onClick = {
                         movieViewModel.deleteMovie(movie)
                         movieToDelete = null
-                        showUndoSnackbar("Moved \"${movie.title}\" to trash") {
+                        showUndoSnackbar(
+                            String.format(
+                                Locale.getDefault(),
+                                moveToTrashSnackbarFormat,
+                                movie.title
+                            )
+                        ) {
                             movieViewModel.restoreMovie(movie)
                         }
                     }
-                ) { Text("Move to Trash") }
+                ) { Text(stringResource(R.string.move_to_trash)) }
             },
             dismissButton = {
-                Button(onClick = { movieToDelete = null }) { Text("Cancel") }
+                Button(onClick = { movieToDelete = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
             }
         )
     }
@@ -479,6 +532,6 @@ private fun ClofScaffold(
 @Composable
 private fun BackButton(onClick: () -> Unit) {
     Button(onClick = onClick, modifier = Modifier.padding(12.dp)) {
-        Text("Back")
+        Text(stringResource(R.string.back))
     }
 }

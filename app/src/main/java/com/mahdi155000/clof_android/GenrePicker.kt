@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun GenrePicker(
@@ -21,9 +22,9 @@ fun GenrePicker(
     Button(onClick = { expanded = true }) {
         Text(
             if (selectedGenres.isEmpty()) {
-                "Genres: None"
+                stringResource(R.string.genres_none)
             } else {
-                "Genres: ${selectedGenres.joinToString(", ")}"
+                stringResource(R.string.genres_label, selectedGenres.joinToString(", "))
             }
         )
     }
@@ -33,7 +34,7 @@ fun GenrePicker(
         onDismissRequest = { expanded = false }
     ) {
         DropdownMenuItem(
-            text = { Text("None") },
+            text = { Text(stringResource(R.string.none)) },
             onClick = {
                 onGenresChanged(emptyList())
                 expanded = false
@@ -42,7 +43,13 @@ fun GenrePicker(
         genres.forEach { genre ->
             DropdownMenuItem(
                 text = {
-                    Text(if (genre in selectedGenres) "✓ $genre" else genre)
+                    Text(
+                        if (genre in selectedGenres) {
+                            stringResource(R.string.selected_item, genre)
+                        } else {
+                            genre
+                        }
+                    )
                 },
                 onClick = {
                     onGenresChanged(

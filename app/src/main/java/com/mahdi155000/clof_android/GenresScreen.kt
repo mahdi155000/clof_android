@@ -23,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.mahdi155000.clof_android.viewmodel.MovieViewModel
 
@@ -32,6 +33,12 @@ fun GenresScreen(
     onBack: () -> Unit,
     onShowUndo: (String, () -> Unit) -> Unit
 ) {
+    val genreAddedMessage = stringResource(R.string.genre_added)
+    val genreExistsMessage = stringResource(R.string.genre_exists)
+    val genreRenamedMessage = stringResource(R.string.genre_renamed)
+    val newGenreNameMessage = stringResource(R.string.new_genre_name)
+    val genreRemovedMessage = stringResource(R.string.genre_removed)
+    val genreRemoveErrorMessage = stringResource(R.string.genre_remove_error)
     val genres by movieViewModel.genres.collectAsState()
     var newGenreName by remember { mutableStateOf("") }
     var editingGenre by remember { mutableStateOf<String?>(null) }
@@ -46,18 +53,18 @@ fun GenresScreen(
             .padding(24.dp)
     ) {
         Button(onClick = onBack) {
-            Text("Back")
+            Text(stringResource(R.string.back))
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Manage genres")
+        Text(stringResource(R.string.manage_genres))
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = newGenreName,
             onValueChange = { newGenreName = it },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("New genre") },
+            label = { Text(stringResource(R.string.new_genre)) },
             singleLine = true
         )
 
@@ -68,15 +75,15 @@ fun GenresScreen(
                 movieViewModel.addGenre(newGenreName.trim()) { added ->
                     message = if (added) {
                         newGenreName = ""
-                        "Genre added."
+                        genreAddedMessage
                     } else {
-                        "That genre already exists."
+                        genreExistsMessage
                     }
                 }
             },
             enabled = newGenreName.isNotBlank()
         ) {
-            Text("Add genre")
+            Text(stringResource(R.string.add_genre))
         }
 
         message?.let {
@@ -93,7 +100,7 @@ fun GenresScreen(
                         value = editedName,
                         onValueChange = { editedName = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Genre name") },
+                        label = { Text(stringResource(R.string.genre_name)) },
                         singleLine = true
                     )
 
@@ -108,18 +115,18 @@ fun GenresScreen(
                                 movieViewModel.renameGenre(genre, editedName.trim()) { renamed ->
                                     message = if (renamed) {
                                         editingGenre = null
-                                        "Genre renamed."
+                                        genreRenamedMessage
                                     } else {
-                                        "Use a new genre name."
+                                        newGenreNameMessage
                                     }
                                 }
                             },
                             enabled = editedName.isNotBlank()
                         ) {
-                            Text("Save")
+                            Text(stringResource(R.string.save))
                         }
                         Button(onClick = { editingGenre = null }) {
-                            Text("Cancel")
+                            Text(stringResource(R.string.cancel))
                         }
                     }
                 } else {
@@ -137,12 +144,12 @@ fun GenresScreen(
                                     editedName = genre
                                 }
                             ) {
-                                Text("Rename")
+                                Text(stringResource(R.string.rename))
                             }
                             Button(
                                 onClick = { genreToRemove = genre }
                             ) {
-                                Text("Remove")
+                                Text(stringResource(R.string.remove))
                             }
                         }
 
@@ -156,17 +163,22 @@ fun GenresScreen(
             val affectedMovies = movies.filter { movie ->
                 genre in movie.genre.split(",").map { it.trim() }
             }
+            val removedGenreSnackbar = stringResource(R.string.genre_removed_snackbar, genre)
             AlertDialog(
                 onDismissRequest = { genreToRemove = null },
-                title = { Text("Remove genre?") },
+                title = { Text(stringResource(R.string.remove_genre_title)) },
                 text = {
                     Text(
                         if (affectedMovies.isEmpty()) {
-                            "No movies or series use \"$genre\"."
+                            stringResource(R.string.no_items_use_genre, genre)
                         } else {
                             val titles = affectedMovies.joinToString("\n") { "• ${it.title}" }
-                            "The genre \"$genre\" will be removed from " +
-                                "${affectedMovies.size} movie(s)/series:\n\n$titles"
+                            stringResource(
+                                R.string.genre_removal_warning,
+                                genre,
+                                affectedMovies.size,
+                                titles
+                            )
                         }
                     )
                 },
@@ -176,22 +188,22 @@ fun GenresScreen(
                             genreToRemove = null
                             movieViewModel.removeGenre(genre) { removed ->
                                 message = if (removed) {
-                                    onShowUndo("Removed genre \"$genre\"") {
+                                    onShowUndo(removedGenreSnackbar) {
                                         movieViewModel.restoreGenre(genre, affectedMovies)
                                     }
-                                    "Genre removed from the list and its movies."
+                                    genreRemovedMessage
                                 } else {
-                                    "Genre could not be removed."
+                                    genreRemoveErrorMessage
                                 }
                             }
                         }
                     ) {
-                        Text("Remove")
+                        Text(stringResource(R.string.remove))
                     }
                 },
                 dismissButton = {
                     Button(onClick = { genreToRemove = null }) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.cancel))
                     }
                 }
             )
