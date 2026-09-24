@@ -18,7 +18,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MovieViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -32,7 +34,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
     private val genreRepository = GenreRepository(database.genreDao())
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             collectionRepository.addMissingCollections(CollectionNames.DEFAULT)
             genreRepository.addMissingGenres(AppDatabase.defaultGenres)
         }
@@ -92,7 +94,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         onDuplicate: () -> Unit = {},
         onError: (Throwable) -> Unit = {}
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 val inserted = repository.insertMovie(
                     MovieEntity(
@@ -108,13 +110,16 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 )
 
-                if (inserted) onComplete() else onDuplicate()
+                withContext(Dispatchers.Main) {
+                    if (inserted) onComplete() else onDuplicate()
+                }
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Exception) {
-                onError(exception)
+                withContext(Dispatchers.Main) {
+                    onError(exception)
+                }
             }
-
         }
     }
 
@@ -122,26 +127,28 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         movie: MovieEntity,
         onComplete: () -> Unit = {}
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.deleteMovie(movie)
-            onComplete()
+            withContext(Dispatchers.Main) {
+                onComplete()
+            }
         }
     }
 
     fun restoreMovie(movie: MovieEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.restoreMovie(movie)
         }
     }
 
     fun permanentlyDeleteMovie(movie: MovieEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.permanentlyDeleteMovie(movie)
         }
     }
 
     fun emptyTrash() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.emptyTrash()
         }
     }
@@ -150,7 +157,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         movie: MovieEntity,
         watched: Boolean
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.setWatched(
                 movie.id,
                 watched
@@ -159,68 +166,68 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun restoreMovieState(movie: MovieEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.updateMovie(movie)
         }
     }
 
     fun restoreGenre(name: String, movies: List<MovieEntity>) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             genreRepository.addGenre(name)
             movies.forEach { repository.updateMovie(it) }
         }
     }
 
     fun nextEpisode(movie: MovieEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.nextEpisode(movie.id)
         }
     }
 
     fun previousEpisode(movie: MovieEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.previousEpisode(movie.id)
         }
     }
 
     fun moveMovie(movie: MovieEntity, collection: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.moveMovie(movie.id, collection)
         }
     }
 
     fun setPinned(movie: MovieEntity, pinned: Boolean) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.setPinned(movie.id, pinned)
         }
     }
 
     fun setCustomOrder(movie: MovieEntity, customOrder: Int) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.setCustomOrder(movie.id, customOrder)
         }
     }
 
     fun setPersonalRating(movie: MovieEntity, rating: Int?) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.setPersonalRating(movie.id, rating?.coerceIn(1, 5))
         }
     }
 
     fun setFavorite(movie: MovieEntity, favorite: Boolean) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.setFavorite(movie.id, favorite)
         }
     }
 
     fun nextSeason(movie: MovieEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.nextSeason(movie.id)
         }
     }
 
     fun previousSeason(movie: MovieEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.previousSeason(movie.id)
         }
     }
@@ -230,11 +237,14 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         onComplete: (ImportResult) -> Unit,
         onError: (Throwable) -> Unit
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             runCatching {
                 databaseImporter.importFrom(uri)
-            }.onSuccess(onComplete)
-                .onFailure(onError)
+            }.onSuccess { result ->
+                withContext(Dispatchers.Main) { onComplete(result) }
+            }.onFailure { error ->
+                withContext(Dispatchers.Main) { onError(error) }
+            }
         }
     }
 
@@ -243,17 +253,21 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         onComplete: () -> Unit,
         onError: (Throwable) -> Unit
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             runCatching {
                 databaseExporter.exportTo(uri)
-            }.onSuccess { onComplete() }
-                .onFailure(onError)
+            }.onSuccess {
+                withContext(Dispatchers.Main) { onComplete() }
+            }.onFailure { error ->
+                withContext(Dispatchers.Main) { onError(error) }
+            }
         }
     }
 
     fun addCollection(name: String, onComplete: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            onComplete(collectionRepository.addCollection(name.trim()))
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = collectionRepository.addCollection(name.trim())
+            withContext(Dispatchers.Main) { onComplete(result) }
         }
     }
 
@@ -262,20 +276,23 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         newName: String,
         onComplete: (Boolean) -> Unit
     ) {
-        viewModelScope.launch {
-            onComplete(collectionRepository.renameCollection(oldName, newName.trim()))
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = collectionRepository.renameCollection(oldName, newName.trim())
+            withContext(Dispatchers.Main) { onComplete(result) }
         }
     }
 
     fun removeCollection(name: String, onComplete: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            onComplete(collectionRepository.removeCollection(name))
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = collectionRepository.removeCollection(name)
+            withContext(Dispatchers.Main) { onComplete(result) }
         }
     }
 
     fun addGenre(name: String, onComplete: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            onComplete(genreRepository.addGenre(name.trim()))
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = genreRepository.addGenre(name.trim())
+            withContext(Dispatchers.Main) { onComplete(result) }
         }
     }
 
@@ -284,14 +301,16 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         newName: String,
         onComplete: (Boolean) -> Unit
     ) {
-        viewModelScope.launch {
-            onComplete(genreRepository.renameGenre(oldName, newName.trim()))
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = genreRepository.renameGenre(oldName, newName.trim())
+            withContext(Dispatchers.Main) { onComplete(result) }
         }
     }
 
     fun removeGenre(name: String, onComplete: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            onComplete(genreRepository.removeGenre(name))
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = genreRepository.removeGenre(name)
+            withContext(Dispatchers.Main) { onComplete(result) }
         }
     }
 
@@ -301,17 +320,18 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         onDuplicate: () -> Unit = {},
         onError: (Throwable) -> Unit = {}
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                if (repository.updateMovie(movie)) {
-                    onComplete()
-                } else {
-                    onDuplicate()
+                val updated = repository.updateMovie(movie)
+                withContext(Dispatchers.Main) {
+                    if (updated) onComplete() else onDuplicate()
                 }
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Exception) {
-                onError(exception)
+                withContext(Dispatchers.Main) {
+                    onError(exception)
+                }
             }
         }
     }

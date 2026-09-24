@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.AlertDialog
@@ -115,67 +114,56 @@ fun CollectionsScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        item {
-                            Button(
-                                onClick = {
-                                    val name = editedName.trim()
-                                    if (name.isNotEmpty()) {
-                                        movieViewModel.renameCollection(collection, name) { renamed ->
-                                            message = if (renamed) {
-                                                editingCollection = null
-                                                onCollectionRenamed(collection, name)
-                                                collectionRenamedMessage
-                                            } else {
-                                                newCollectionNameMessage
-                                            }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = {
+                                val name = editedName.trim()
+                                if (name.isNotEmpty()) {
+                                    movieViewModel.renameCollection(collection, name) { renamed ->
+                                        message = if (renamed) {
+                                            editingCollection = null
+                                            onCollectionRenamed(collection, name)
+                                            collectionRenamedMessage
+                                        } else {
+                                            newCollectionNameMessage
                                         }
                                     }
-                                },
-                                enabled = editedName.isNotBlank()
-                            ) {
-                                Text(stringResource(R.string.save))
-                            }
+                                }
+                            },
+                            enabled = editedName.isNotBlank()
+                        ) {
+                            Text(stringResource(R.string.save))
                         }
-                        item {
-                            Button(onClick = { editingCollection = null }) {
-                                Text(stringResource(R.string.cancel))
-                            }
+                        Button(onClick = { editingCollection = null }) {
+                            Text(stringResource(R.string.cancel))
                         }
                     }
                 } else {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(collection, modifier = Modifier.padding(top = 12.dp))
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            item {
-                                Button(
-                                    onClick = { onViewCollection(collection) }
-                                ) {
-                                    Text(stringResource(R.string.view))
-                                }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = { onViewCollection(collection) }
+                            ) {
+                                Text(stringResource(R.string.view))
                             }
-                            item {
-                                Button(
-                                    onClick = {
-                                        editingCollection = collection
-                                        editedName = collection
-                                    },
-                                    enabled = !CollectionNames.isReserved(collection)
-                                ) {
-                                    Text(stringResource(R.string.rename))
-                                }
+                            Button(
+                                onClick = {
+                                    editingCollection = collection
+                                    editedName = collection
+                                },
+                                enabled = !CollectionNames.isReserved(collection)
+                            ) {
+                                Text(stringResource(R.string.rename))
                             }
-                            item {
-                                Button(
-                                    onClick = {
-                                        collectionToRemove = collection
-                                    },
-                                    enabled = !CollectionNames.isReserved(collection)
-                                ) {
-                                    Text(stringResource(R.string.remove))
-                                }
+                            Button(
+                                onClick = {
+                                    collectionToRemove = collection
+                                },
+                                enabled = !CollectionNames.isReserved(collection)
+                            ) {
+                                Text(stringResource(R.string.remove))
                             }
-
                         }
                     }
                 }

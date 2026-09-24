@@ -7,6 +7,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,21 +48,26 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mahdi155000.clof_android.data.CollectionNames
 import com.mahdi155000.clof_android.data.MovieEntity
 import com.mahdi155000.clof_android.viewmodel.MovieViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun MovieList(
@@ -118,7 +125,8 @@ fun MovieList(
         }
     }
 
-    val filteredMovies = remember(
+    val filteredMovies by produceState(
+        initialValue = emptyList<MovieEntity>(),
         movies,
         searchText,
         typeFilter,
@@ -129,91 +137,32 @@ fun MovieList(
         collectionFilter,
         sortOption
     ) {
-        movies
-            .filter { movie ->
-                val matchesSearch = listOf(
-                    movie.title,
-                    movie.genre,
-                    movie.collection,
-                    if (movie.isSeries) "season ${movie.season}" else "",
-                    if (movie.isSeries) "episode ${movie.episode}" else "",
-                    if (movie.isSeries) movie.season.toString() else "",
-                    if (movie.isSeries) movie.episode.toString() else ""
-                ).any { field ->
-                    field.contains(searchText, ignoreCase = true)
-                }
+        value = withContext(Dispatchers.Default) {
+            filterAndSortMovies(
+                movies = movies,
+                searchText = searchText,
+                typeFilter = typeFilter,
+                watchedFilter = watchedFilter,
+                favoriteFilter = favoriteFilter,
+                ratingFilter = ratingFilter,
+                selectedCollection = selectedCollection,
+                collectionFilter = collectionFilter,
+                sortOption = sortOption
+            )
+        }
+    }
 
-                val matchesType = when (typeFilter) {
-                    "Movies" -> !movie.isSeries
-                    "Series" -> movie.isSeries
-                    else -> true
-                }
-
-                val matchesWatched = when (watchedFilter) {
-                    "Watched" -> movie.watched
-                    "Unwatched" -> !movie.watched
-                    else -> true
-                }
-
-                val matchesFavorite = favoriteFilter == "All" ||
-                    (favoriteFilter == "Favorites" && movie.favorite)
-                val matchesRating = when (ratingFilter) {
-                    "Rated" -> movie.personalRating != null
-                    "Unrated" -> movie.personalRating == null
-                    else -> true
-                }
-
-                val matchesCollection =
-                    (selectedCollection == null || movie.collection == selectedCollection) &&
-                        (collectionFilter == "All" || movie.collection == collectionFilter)
-
-                matchesSearch &&
-                    matchesType &&
-                    matchesWatched &&
-                    matchesFavorite &&
-                    matchesRating &&
-                    matchesCollection
+    val onToggleReorderMode = remember { { reorderMode = true } }
+    val onMoveItem = remember(filteredMovies, movieViewModel) {
+        { movie: MovieEntity, direction: Int ->
+            val index = filteredMovies.indexOfFirst { it.id == movie.id }
+            val targetIndex = index + direction
+            if (index >= 0 && targetIndex in filteredMovies.indices) {
+                val target = filteredMovies[targetIndex]
+                movieViewModel.setCustomOrder(movie, target.customOrder)
+                movieViewModel.setCustomOrder(target, movie.customOrder)
             }
-            .let { list ->
-                val ordered = when (sortOption) {
-                    "Custom Order" -> list.sortedBy { it.customOrder }
-                    "Title A-Z" -> list.sortedBy { it.title.lowercase() }
-                    "Title Z-A" -> list.sortedByDescending { it.title.lowercase() }
-                    "Oldest Added" -> list.sortedBy { it.createdAt }
-                    "Collection A-Z" -> list.sortedWith(
-                        compareBy<MovieEntity> { it.collection.lowercase() }
-                            .thenBy { it.title.lowercase() }
-                    )
-                    "Genre A-Z" -> list.sortedWith(
-                        compareBy<MovieEntity> { it.genre.lowercase() }
-                            .thenBy { it.title.lowercase() }
-                    )
-                    "Watched First" -> list.sortedWith(
-                        compareByDescending<MovieEntity> { it.watched }
-                            .thenBy { it.title.lowercase() }
-                    )
-                    "Favorites First" -> list.sortedWith(
-                        compareByDescending<MovieEntity> { it.favorite }
-                            .thenBy { it.title.lowercase() }
-                    )
-                    "Highest Rated" -> list.sortedWith(
-                        compareByDescending<MovieEntity> { it.personalRating ?: 0 }
-                            .thenBy { it.title.lowercase() }
-                    )
-                    "Series Progress" -> list.sortedWith(
-                        compareBy<MovieEntity> { !it.isSeries }
-                            .thenBy { if (it.isSeries) it.season else 0 }
-                            .thenBy { if (it.isSeries) it.episode else 0 }
-                            .thenBy { it.title.lowercase() }
-                    )
-                    else -> list.sortedByDescending { it.createdAt }
-                }
-                val sortRanks = ordered.withIndex().associate { it.value.id to it.index }
-                ordered.sortedWith(
-                    compareByDescending<MovieEntity> { it.pinned }
-                        .thenBy { sortRanks[it.id] ?: Int.MAX_VALUE }
-                )
-            }
+        }
     }
 
     Column(
@@ -275,37 +224,24 @@ fun MovieList(
                 )
             )
 
-            LazyRow(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(horizontal = 0.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                item {
-                    FilterButton(
-                        text = stringResource(R.string.all),
-                        selected = typeFilter == "All"
-                    ) {
-                        typeFilter = "All"
-                    }
-                }
-                item {
-                    FilterButton(
-                        text = stringResource(R.string.movies),
-                        selected = typeFilter == "Movies"
-                    ) {
-                        typeFilter = "Movies"
-                    }
-                }
-                item {
-                    FilterButton(
-                        text = stringResource(R.string.series),
-                        selected = typeFilter == "Series"
-                    ) {
-                        typeFilter = "Series"
-                    }
-                }
+                FilterButton(
+                    text = stringResource(R.string.all),
+                    selected = typeFilter == "All"
+                ) { typeFilter = "All" }
+                FilterButton(
+                    text = stringResource(R.string.movies),
+                    selected = typeFilter == "Movies"
+                ) { typeFilter = "Movies" }
+                FilterButton(
+                    text = stringResource(R.string.series),
+                    selected = typeFilter == "Series"
+                ) { typeFilter = "Series" }
             }
 
             Text(
@@ -317,35 +253,65 @@ fun MovieList(
                 )
             )
 
-            LazyRow(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                item {
-                    FilterButton(
-                        text = stringResource(R.string.all),
-                        selected = watchedFilter == "All"
-                    ) {
-                        watchedFilter = "All"
-                    }
+                FilterButton(
+                    text = stringResource(R.string.all),
+                    selected = watchedFilter == "All"
+                ) { watchedFilter = "All" }
+                FilterButton(
+                    text = stringResource(R.string.watched),
+                    selected = watchedFilter == "Watched"
+                ) { watchedFilter = "Watched" }
+                FilterButton(
+                    text = stringResource(R.string.unwatched),
+                    selected = watchedFilter == "Unwatched"
+                ) { watchedFilter = "Unwatched" }
+            }
+
+            Text(
+                text = stringResource(R.string.favorites),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(start = 12.dp, top = 12.dp)
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterButton(stringResource(R.string.all), favoriteFilter == "All") {
+                    favoriteFilter = "All"
                 }
-                item {
-                    FilterButton(
-                        text = stringResource(R.string.watched),
-                        selected = watchedFilter == "Watched"
-                    ) {
-                        watchedFilter = "Watched"
-                    }
+                FilterButton(
+                    stringResource(R.string.favorites),
+                    favoriteFilter == "Favorites"
+                ) { favoriteFilter = "Favorites" }
+            }
+
+            Text(
+                text = stringResource(R.string.rating),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(start = 12.dp, top = 12.dp)
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterButton(stringResource(R.string.all), ratingFilter == "All") {
+                    ratingFilter = "All"
                 }
-                item {
-                    FilterButton(
-                        text = stringResource(R.string.unwatched),
-                        selected = watchedFilter == "Unwatched"
-                    ) {
-                        watchedFilter = "Unwatched"
-                    }
+                FilterButton(stringResource(R.string.rated), ratingFilter == "Rated") {
+                    ratingFilter = "Rated"
+                }
+                FilterButton(stringResource(R.string.unrated), ratingFilter == "Unrated") {
+                    ratingFilter = "Unrated"
                 }
             }
 
@@ -358,85 +324,30 @@ fun MovieList(
                 )
             )
 
-            Text(
-                    text = stringResource(R.string.favorites),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 12.dp, top = 12.dp)
-                )
-            LazyRow(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    item {
-                        FilterButton(stringResource(R.string.all), favoriteFilter == "All") {
-                            favoriteFilter = "All"
-                        }
-                    }
-                    item {
-                        FilterButton(
-                            stringResource(R.string.favorites),
-                            favoriteFilter == "Favorites"
-                        ) { favoriteFilter = "Favorites" }
-                    }
-                }
-
-            Text(
-                    text = stringResource(R.string.rating),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 12.dp, top = 12.dp)
-                )
-            LazyRow(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    item {
-                        FilterButton(stringResource(R.string.all), ratingFilter == "All") {
-                            ratingFilter = "All"
-                        }
-                    }
-                    item {
-                        FilterButton(stringResource(R.string.rated), ratingFilter == "Rated") {
-                            ratingFilter = "Rated"
-                        }
-                    }
-                    item {
-                        FilterButton(stringResource(R.string.unrated), ratingFilter == "Unrated") {
-                            ratingFilter = "Unrated"
-                        }
-                    }
-                }
-
-            LazyRow(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = 12.dp)
+                    .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                item {
-                    FilterButton(
-                        text = stringResource(R.string.custom),
-                        selected = sortOption == "Custom Order"
-                    ) {
-                        sortOption = if (sortOption == "Custom Order") {
-                            "Recently Added"
-                        } else {
-                            "Custom Order"
-                        }
+                FilterButton(
+                    text = stringResource(R.string.custom),
+                    selected = sortOption == "Custom Order"
+                ) {
+                    sortOption = if (sortOption == "Custom Order") {
+                        "Recently Added"
+                    } else {
+                        "Custom Order"
                     }
                 }
-                item {
-                    FilterButton(
-                        text = stringResource(R.string.all),
-                        selected = collectionFilter == "All"
-                    ) {
-                        collectionFilter = "All"
-                    }
+                FilterButton(
+                    text = stringResource(R.string.all),
+                    selected = collectionFilter == "All"
+                ) {
+                    collectionFilter = "All"
                 }
-
-                items(
-                    items = collections,
-                    key = { collection -> collection }
-                ) { collection ->
+                collections.forEach { collection ->
                     FilterButton(
                         text = collection,
                         selected = collectionFilter == collection
@@ -455,92 +366,53 @@ fun MovieList(
                 )
             )
 
-            LazyRow(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = 12.dp)
+                    .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                item {
-                    FilterButton(
-                        text = stringResource(R.string.recent),
-                        selected = sortOption == "Recently Added"
-                    ) {
-                        sortOption = "Recently Added"
-                    }
-                }
-                item {
-                    FilterButton(
-                        text = stringResource(R.string.oldest),
-                        selected = sortOption == "Oldest Added"
-                    ) {
-                        sortOption = "Oldest Added"
-                    }
-                }
-                item {
-                    FilterButton(
-                        text = stringResource(R.string.a_z),
-                        selected = sortOption == "Title A-Z"
-                    ) {
-                        sortOption = "Title A-Z"
-                    }
-                }
-                item {
-                    FilterButton(
-                        text = stringResource(R.string.z_a),
-                        selected = sortOption == "Title Z-A"
-                    ) {
-                        sortOption = "Title Z-A"
-                    }
-                }
-                item {
-                    FilterButton(
-                        text = stringResource(R.string.collection),
-                        selected = sortOption == "Collection A-Z"
-                    ) {
-                        sortOption = "Collection A-Z"
-                    }
-                }
-                item {
-                    FilterButton(
-                        text = stringResource(R.string.genre),
-                        selected = sortOption == "Genre A-Z"
-                    ) {
-                        sortOption = "Genre A-Z"
-                    }
-                }
-                item {
-                    FilterButton(
-                        text = stringResource(R.string.watched),
-                        selected = sortOption == "Watched First"
-                    ) {
-                        sortOption = "Watched First"
-                    }
-                }
-                item {
-                    FilterButton(
-                        text = stringResource(R.string.progress),
-                        selected = sortOption == "Series Progress"
-                    ) {
-                        sortOption = "Series Progress"
-                    }
-                }
-                item {
-                    FilterButton(
-                        text = stringResource(R.string.favorites),
-                        selected = sortOption == "Favorites First"
-                    ) {
-                        sortOption = "Favorites First"
-                    }
-                }
-                item {
-                    FilterButton(
-                        text = stringResource(R.string.rating),
-                        selected = sortOption == "Highest Rated"
-                    ) {
-                        sortOption = "Highest Rated"
-                    }
-                }
+                FilterButton(
+                    text = stringResource(R.string.recent),
+                    selected = sortOption == "Recently Added"
+                ) { sortOption = "Recently Added" }
+                FilterButton(
+                    text = stringResource(R.string.oldest),
+                    selected = sortOption == "Oldest Added"
+                ) { sortOption = "Oldest Added" }
+                FilterButton(
+                    text = stringResource(R.string.a_z),
+                    selected = sortOption == "Title A-Z"
+                ) { sortOption = "Title A-Z" }
+                FilterButton(
+                    text = stringResource(R.string.z_a),
+                    selected = sortOption == "Title Z-A"
+                ) { sortOption = "Title Z-A" }
+                FilterButton(
+                    text = stringResource(R.string.collection),
+                    selected = sortOption == "Collection A-Z"
+                ) { sortOption = "Collection A-Z" }
+                FilterButton(
+                    text = stringResource(R.string.genre),
+                    selected = sortOption == "Genre A-Z"
+                ) { sortOption = "Genre A-Z" }
+                FilterButton(
+                    text = stringResource(R.string.watched),
+                    selected = sortOption == "Watched First"
+                ) { sortOption = "Watched First" }
+                FilterButton(
+                    text = stringResource(R.string.progress),
+                    selected = sortOption == "Series Progress"
+                ) { sortOption = "Series Progress" }
+                FilterButton(
+                    text = stringResource(R.string.favorites),
+                    selected = sortOption == "Favorites First"
+                ) { sortOption = "Favorites First" }
+                FilterButton(
+                    text = stringResource(R.string.rating),
+                    selected = sortOption == "Highest Rated"
+                ) { sortOption = "Highest Rated" }
             }
 
             Spacer(
@@ -599,16 +471,8 @@ fun MovieList(
                         onDelete = onDelete,
                         onShowUndo = onShowUndo,
                         reorderMode = reorderMode,
-                        onToggleReorderMode = { reorderMode = true },
-                        onMove = { movie, direction ->
-                            val index = filteredMovies.indexOfFirst { it.id == movie.id }
-                            val targetIndex = index + direction
-                            if (index >= 0 && targetIndex in filteredMovies.indices) {
-                                val target = filteredMovies[targetIndex]
-                                movieViewModel.setCustomOrder(movie, target.customOrder)
-                                movieViewModel.setCustomOrder(target, movie.customOrder)
-                            }
-                        }
+                        onToggleReorderMode = onToggleReorderMode,
+                        onMove = onMoveItem
                     )
 
                     Spacer(
@@ -619,6 +483,106 @@ fun MovieList(
         }
     }
 }
+
+fun filterAndSortMovies(
+    movies: List<MovieEntity>,
+    searchText: String,
+    typeFilter: String,
+    watchedFilter: String,
+    favoriteFilter: String,
+    ratingFilter: String,
+    selectedCollection: String?,
+    collectionFilter: String,
+    sortOption: String
+): List<MovieEntity> {
+    if (movies.isEmpty()) return emptyList()
+
+    val trimmedSearch = searchText.trim()
+    val hasSearch = trimmedSearch.isNotEmpty()
+
+    val filtered = movies.filter { movie ->
+        if (hasSearch) {
+            val matchesSearch = movie.title.contains(trimmedSearch, ignoreCase = true) ||
+                movie.genre.contains(trimmedSearch, ignoreCase = true) ||
+                movie.collection.contains(trimmedSearch, ignoreCase = true) ||
+                (movie.isSeries && (
+                    "season ${movie.season}".contains(trimmedSearch, ignoreCase = true) ||
+                    "episode ${movie.episode}".contains(trimmedSearch, ignoreCase = true) ||
+                    movie.season.toString().contains(trimmedSearch, ignoreCase = true) ||
+                    movie.episode.toString().contains(trimmedSearch, ignoreCase = true)
+                ))
+            if (!matchesSearch) return@filter false
+        }
+
+        when (typeFilter) {
+            "Movies" -> if (movie.isSeries) return@filter false
+            "Series" -> if (!movie.isSeries) return@filter false
+        }
+
+        when (watchedFilter) {
+            "Watched" -> if (!movie.watched) return@filter false
+            "Unwatched" -> if (movie.watched) return@filter false
+        }
+
+        if (favoriteFilter == "Favorites" && !movie.favorite) return@filter false
+
+        when (ratingFilter) {
+            "Rated" -> if (movie.personalRating == null) return@filter false
+            "Unrated" -> if (movie.personalRating != null) return@filter false
+        }
+
+        if (selectedCollection != null && movie.collection != selectedCollection) return@filter false
+        if (collectionFilter != "All" && movie.collection != collectionFilter) return@filter false
+
+        true
+    }
+
+    if (filtered.isEmpty()) return emptyList()
+
+    val ordered = when (sortOption) {
+        "Custom Order" -> filtered.sortedBy { it.customOrder }
+        "Title A-Z" -> filtered.sortedBy { it.title.lowercase() }
+        "Title Z-A" -> filtered.sortedByDescending { it.title.lowercase() }
+        "Oldest Added" -> filtered.sortedBy { it.createdAt }
+        "Collection A-Z" -> filtered.sortedWith(
+            compareBy<MovieEntity> { it.collection.lowercase() }
+                .thenBy { it.title.lowercase() }
+        )
+        "Genre A-Z" -> filtered.sortedWith(
+            compareBy<MovieEntity> { it.genre.lowercase() }
+                .thenBy { it.title.lowercase() }
+        )
+        "Watched First" -> filtered.sortedWith(
+            compareByDescending<MovieEntity> { it.watched }
+                .thenBy { it.title.lowercase() }
+        )
+        "Favorites First" -> filtered.sortedWith(
+            compareByDescending<MovieEntity> { it.favorite }
+                .thenBy { it.title.lowercase() }
+        )
+        "Highest Rated" -> filtered.sortedWith(
+            compareByDescending<MovieEntity> { it.personalRating ?: 0 }
+                .thenBy { it.title.lowercase() }
+        )
+        "Series Progress" -> filtered.sortedWith(
+            compareBy<MovieEntity> { !it.isSeries }
+                .thenBy { if (it.isSeries) it.season else 0 }
+                .thenBy { if (it.isSeries) it.episode else 0 }
+                .thenBy { it.title.lowercase() }
+        )
+        else -> filtered.sortedByDescending { it.createdAt }
+    }
+
+    val anyPinned = ordered.any { it.pinned }
+    if (!anyPinned) return ordered
+
+    val sortRanks = ordered.indices.associateBy { ordered[it].id }
+    return ordered.sortedWith(
+        compareByDescending<MovieEntity> { it.pinned }
+            .thenBy { sortRanks[it.id] ?: Int.MAX_VALUE }
+    )
+}
+
 @Composable
 fun FilterButton(
     text: String,
@@ -652,6 +616,7 @@ fun MovieItem(
     onMove: (MovieEntity, Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val resources = LocalContext.current.resources
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -752,15 +717,6 @@ fun MovieItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                val markedStatusMessage = stringResource(
-                    R.string.marked_status,
-                    stringResource(if (movie.watched) R.string.unwatched else R.string.watched)
-                )
-                val movedToWatchedMessage = stringResource(
-                    R.string.moved_to_collection,
-                    movie.title,
-                    CollectionNames.WATCHED
-                )
                 Button(
                     onClick = {
                         if (movie.isSeries) {
@@ -770,6 +726,10 @@ fun MovieItem(
                             movieViewModel.setWatched(
                                 movie,
                                 !previous
+                            )
+                            val markedStatusMessage = resources.getString(
+                                R.string.marked_status,
+                                resources.getString(if (movie.watched) R.string.unwatched else R.string.watched)
                             )
                             onShowUndo(markedStatusMessage) {
                                 movieViewModel.setWatched(movie, previous)
@@ -811,6 +771,11 @@ fun MovieItem(
                         onClick = {
                             val previousCollection = movie.collection
                             movieViewModel.moveMovie(movie, CollectionNames.WATCHED)
+                            val movedToWatchedMessage = resources.getString(
+                                R.string.moved_to_collection,
+                                movie.title,
+                                CollectionNames.WATCHED
+                            )
                             onShowUndo(movedToWatchedMessage) {
                                 movieViewModel.moveMovie(movie, previousCollection)
                             }
